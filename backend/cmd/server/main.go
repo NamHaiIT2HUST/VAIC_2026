@@ -50,6 +50,8 @@ func main() {
 
 	// API Routes
 	app.Get("/api/v1/patients", patientHandler.GetPatients)
+	app.Get("/api/v1/patients/:id/pathway", patientHandler.GetPatientPathway)
+	app.Get("/api/v1/stats", patientHandler.GetStats)
 	app.Post("/api/v1/events/trigger", eventHandler.TriggerEvent)
 
 	log.Printf("Server starting on port %s", cfg.Port)

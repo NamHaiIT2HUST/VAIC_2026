@@ -1,17 +1,25 @@
 import { useState, useEffect } from 'react';
 import { Activity, FileText, UserPlus, CheckCircle2, Zap, Clock } from 'lucide-react';
+import ChatbotWidget from '../components/ChatbotWidget';
 
 export default function PatientApp() {
-  const [patientTimeline, setPatientTimeline] = useState([
-    { step: 1, title: 'Lấy Máu (Huyết học)', status: 'completed', time: 'Đã xong (Đang phân tích 45p)', isOptimal: true },
-    { step: 2, title: 'Chụp X-Quang', status: 'current', time: 'Đang đợi (Dự kiến: 5 phút)', isOptimal: true },
-    { step: 3, title: 'Siêu âm Ổ bụng', status: 'pending', time: 'Tối ưu: Chờ sau X-Quang', isOptimal: false },
-    { step: 4, title: 'Gặp Bác sĩ chẩn đoán', status: 'pending', time: 'Quay lại khi đủ 3 kết quả', isOptimal: false },
-  ]);
-
+  const [patient, setPatient] = useState(null);
+  const [patientTimeline, setPatientTimeline] = useState([]);
   const [aiMessage, setAiMessage] = useState('AI CareFlow đã tối ưu lộ trình: Bạn sẽ chụp X-Quang trong lúc chờ kết quả máu để tiết kiệm 45 phút chờ đợi.');
 
   useEffect(() => {
+    const fetchPathway = async () => {
+      try {
+        const res = await fetch('http://localhost:8080/api/v1/patients/BN-2405/pathway');
+        const data = await res.json();
+        setPatient(data.patient);
+        setPatientTimeline(data.timeline);
+      } catch (err) {
+        console.error("Failed to fetch pathway", err);
+      }
+    };
+    fetchPathway();
+
     const socket = new WebSocket('ws://localhost:8080/ws');
     socket.onmessage = (event) => {
       try {
@@ -20,12 +28,7 @@ export default function PatientApp() {
           setAiMessage('⚠ Máy X-Quang số 2 gặp sự cố. AI đang tự động tính toán lại lộ trình của bạn để tránh ùn tắc...');
           setTimeout(() => {
             setAiMessage('⚡ AI CareFlow đã sắp xếp lại: Mời bạn đi Siêu âm trước để tránh ùn tắc tại phòng X-Quang. Tiết kiệm 30 phút.');
-            setPatientTimeline([
-              { step: 1, title: 'Lấy Máu (Huyết học)', status: 'completed', time: 'Đã xong (Đang phân tích)', isOptimal: true },
-              { step: 2, title: 'Siêu âm Ổ bụng', status: 'current', time: 'Đang chuyển đến (Dự kiến: 2 phút)', isOptimal: true },
-              { step: 3, title: 'Chụp X-Quang', status: 'pending', time: 'Chờ sửa chữa / Chuyển phòng', isOptimal: false },
-              { step: 4, title: 'Gặp Bác sĩ chẩn đoán', status: 'pending', time: 'Quay lại khi đủ 3 kết quả', isOptimal: false },
-            ]);
+            fetchPathway(); // Refetch updated timeline from Go DB
           }, 3000);
         }
       } catch (err) {}
@@ -127,12 +130,13 @@ export default function PatientApp() {
       </div>
       
       {/* Bottom Tab Bar */}
-      <div className="fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 p-3 flex justify-around text-slate-400 z-50 md:hidden">
+      <div className="fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 p-3 flex justify-around text-slate-400 z-40 md:hidden">
         <button className="flex flex-col items-center p-2 text-blue-600"><Activity size={24} /><span className="text-[10px] font-bold mt-1">Lộ trình</span></button>
         <button className="flex flex-col items-center p-2 hover:text-slate-600 transition-colors"><FileText size={24} /><span className="text-[10px] font-bold mt-1">Kết quả</span></button>
         <button className="flex flex-col items-center p-2 hover:text-slate-600 transition-colors"><UserPlus size={24} /><span className="text-[10px] font-bold mt-1">Tài khoản</span></button>
       </div>
 
+      <ChatbotWidget />
     </div>
   );
 }
