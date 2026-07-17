@@ -2,11 +2,20 @@ import { useState } from 'react';
 import { Stethoscope, User, FileText, CheckCircle, Clock, LogOut, ChevronRight, Activity, Microscope } from 'lucide-react';
 
 export default function DoctorDashboard() {
-  const [patients] = useState([
-    { id: 'BN-2405', name: 'Hoàng Văn E', age: 45, gender: 'Nam', status: 'Đang khám', time: '10:00' },
-    { id: 'BN-2406', name: 'Ngô Thị F', age: 32, gender: 'Nữ', status: 'Chờ khám', time: '10:15' },
-    { id: 'BN-2407', name: 'Đinh Văn G', age: 60, gender: 'Nam', status: 'Chờ KQ Cận lâm sàng', time: '10:30' },
-  ]);
+  const [patients, setPatients] = useState([]);
+
+  useEffect(() => {
+    const fetchPatients = async () => {
+      try {
+        const res = await fetch('http://localhost:8080/api/v1/patients');
+        const data = await res.json();
+        setPatients(data);
+      } catch (err) {
+        console.error("Failed to fetch patients", err);
+      }
+    };
+    fetchPatients();
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-100 flex font-sans text-slate-800">
@@ -59,10 +68,10 @@ export default function DoctorDashboard() {
             <div className="flex-1 overflow-y-auto">
               <ul className="divide-y divide-slate-100">
                 {patients.map(p => (
-                  <li key={p.id} className={`p-4 hover:bg-slate-50 cursor-pointer transition-colors ${p.status === 'Đang khám' ? 'bg-blue-50/50 border-l-4 border-blue-500' : 'border-l-4 border-transparent'}`}>
+                  <li key={p.patient_code} className={`p-4 hover:bg-slate-50 cursor-pointer transition-colors ${p.status === 'Đang khám' ? 'bg-blue-50/50 border-l-4 border-blue-500' : 'border-l-4 border-transparent'}`}>
                     <div className="flex justify-between items-start mb-1">
                       <h4 className={`font-bold ${p.status === 'Đang khám' ? 'text-blue-800' : 'text-slate-800'}`}>{p.name}</h4>
-                      <span className="text-xs font-mono text-slate-500">{p.id}</span>
+                      <span className="text-xs font-mono text-slate-500">{p.patient_code}</span>
                     </div>
                     <div className="flex justify-between items-center mt-2">
                       <span className="text-xs text-slate-500">{p.age}t - {p.gender}</span>

@@ -17,6 +17,9 @@ import (
 func main() {
 	cfg := config.LoadConfig()
 
+	// Initialize SQLite Database with GORM
+	config.InitDB()
+
 	app := fiber.New()
 
 	app.Use(cors.New(cors.Config{
@@ -43,7 +46,10 @@ func main() {
 		hub.HandleConnection(c)
 	}))
 
+	patientHandler := handlers.NewPatientHandler()
+
 	// API Routes
+	app.Get("/api/v1/patients", patientHandler.GetPatients)
 	app.Post("/api/v1/events/trigger", eventHandler.TriggerEvent)
 
 	log.Printf("Server starting on port %s", cfg.Port)

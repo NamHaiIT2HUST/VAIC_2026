@@ -3,14 +3,21 @@ import { Activity, ShieldPlus, AlertOctagon, LogOut, Search, ChevronRight } from
 
 export default function Dashboard() {
   const [alert, setAlert] = useState(null);
-  const [patients, setPatients] = useState([
-    { id: 'BN-2401', name: 'Nguyễn Văn A', yob: 1985, gender: 'Nam', status: 'Cận lâm sàng', location: 'P. X-Quang 02', time: '10:15' },
-    { id: 'BN-2402', name: 'Trần Thị B', yob: 1990, gender: 'Nữ', status: 'Cận lâm sàng', location: 'P. Lấy máu 01', time: '10:20' },
-    { id: 'BN-2403', name: 'Lê Văn C', yob: 1975, gender: 'Nam', status: 'Chờ khám', location: 'P. Nội 01', time: '10:30' },
-    { id: 'BN-2404', name: 'Phạm Thị D', yob: 2000, gender: 'Nữ', status: 'Tiếp nhận', location: 'Quầy số 3', time: '10:45' },
-  ]);
+  const [patients, setPatients] = useState([]);
 
   useEffect(() => {
+    // Fetch initial data
+    const fetchPatients = async () => {
+      try {
+        const res = await fetch('http://localhost:8080/api/v1/patients');
+        const data = await res.json();
+        setPatients(data);
+      } catch (err) {
+        console.error("Failed to fetch patients", err);
+      }
+    };
+    fetchPatients();
+
     const socket = new WebSocket('ws://localhost:8080/ws');
     socket.onmessage = (event) => {
       try {
@@ -22,11 +29,9 @@ export default function Dashboard() {
         if (data.type === 'ALERT') {
           setAlert(data.message);
           setTimeout(() => {
-            setPatients(prev => prev.map(p => 
-              p.id === 'BN-2401' ? { ...p, status: 'Cận lâm sàng', location: 'P. Lấy máu 01', time: '10:18 (Re-routed)' } : p
-            ));
+            fetchPatients(); // Re-fetch updated patient routes from Go DB
             setTimeout(() => setAlert(null), 8000);
-          }, 2000);
+          }, 3000);
         }
       } catch (err) {}
     };
@@ -131,10 +136,10 @@ export default function Dashboard() {
               </thead>
               <tbody>
                 {patients.map((p, index) => (
-                  <tr key={p.id} className={`border-b border-slate-100 hover:bg-slate-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}`}>
-                    <td className="px-6 py-4 font-mono font-medium text-slate-900">{p.id}</td>
+                  <tr key={p.patient_code} className={`border-b border-slate-100 hover:bg-slate-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}`}>
+                    <td className="px-6 py-4 font-mono font-medium text-slate-900">{p.patient_code}</td>
                     <td className="px-6 py-4 font-semibold text-slate-800">{p.name}</td>
-                    <td className="px-6 py-4 text-slate-600">{p.yob} / {p.gender}</td>
+                    <td className="px-6 py-4 text-slate-600">{p.age}t / {p.gender}</td>
                     <td className="px-6 py-4"><StatusBadge status={p.status} /></td>
                     <td className="px-6 py-4 font-medium text-slate-700">{p.location}</td>
                     <td className="px-6 py-4 text-slate-500">{p.time}</td>
