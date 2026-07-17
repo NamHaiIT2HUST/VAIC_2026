@@ -41,7 +41,7 @@ function App() {
 
   const triggerEvent = async (type, message) => {
     try {
-      await fetch('http://localhost:8080/api/events/trigger', {
+      await fetch('http://localhost:8080/api/v1/events/trigger', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
