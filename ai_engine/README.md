@@ -63,6 +63,3 @@ Codebase đã được thiết kế sẵn các Entry Points (Giao diện API) đ
 - **Giao diện Dashboard (UI Data):** 
   `get_dashboard_state() -> dict`
   *Giao diện để màn hình Dashboard gọi polling (hoặc WebSockets) để vẽ Real-time Heatmap, theo dõi mật độ các phòng khám và trạng thái hàng đợi.*
-
----
-*Lưu ý: Không gian làm việc hiện tại ưu tiên bỏ qua (ignore) các thư mục tài liệu thô hoặc log rác trên Git để tập trung vào mã nguồn.*
