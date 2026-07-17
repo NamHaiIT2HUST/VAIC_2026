@@ -83,12 +83,20 @@ export default function Dashboard() {
           <div className="bg-blue-600 text-white p-2 rounded-lg"><Activity size={28} /></div>
           <div>
             <h1 className="text-2xl font-black text-gray-800 tracking-tight">CareFlow <span className="text-blue-600">Dashboard</span></h1>
-            <p className="text-xs text-gray-500">Màn hình Điều phối Bệnh viện</p>
+            <p className="text-xs text-gray-500">Màn hình Điều phối Bệnh viện (Y Tá)</p>
           </div>
         </div>
-        <button onClick={triggerMachineFailure} className="flex items-center gap-2 bg-red-50 text-red-600 border border-red-200 font-bold py-2 px-4 rounded-lg shadow-sm">
-          <AlertTriangle size={18} /> Giả lập: Hỏng máy X-Quang
-        </button>
+        <div className="flex gap-4">
+          <button onClick={triggerMachineFailure} className="flex items-center gap-2 bg-red-50 text-red-600 border border-red-200 font-bold py-2 px-4 rounded-lg shadow-sm">
+            <AlertTriangle size={18} /> Giả lập: Hỏng máy
+          </button>
+          <button 
+            onClick={() => { localStorage.removeItem('userRole'); window.location.href = '/login'; }}
+            className="flex items-center gap-2 bg-gray-100 text-gray-600 hover:text-red-500 font-bold py-2 px-4 rounded-lg shadow-sm transition-colors"
+          >
+            Đăng xuất
+          </button>
+        </div>
       </header>
 
       {alert && (

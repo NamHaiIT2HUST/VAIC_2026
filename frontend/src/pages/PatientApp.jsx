@@ -35,8 +35,18 @@ export default function PatientApp() {
         <div className="absolute top-0 inset-x-0 h-6 bg-slate-800 rounded-b-xl w-32 mx-auto z-20"></div>
         
         <div className="bg-blue-600 text-white pt-12 pb-6 px-6 rounded-b-3xl shadow-md z-10 relative">
-          <h2 className="text-xl font-bold opacity-90">Xin chào, Nguyễn Văn A</h2>
-          <p className="text-blue-100 text-sm mt-1">Mã BN: P001</p>
+          <div className="flex justify-between items-start">
+            <div>
+              <h2 className="text-xl font-bold opacity-90">Xin chào, Nguyễn Văn A</h2>
+              <p className="text-blue-100 text-sm mt-1">Mã BN: P001</p>
+            </div>
+            <button 
+              onClick={() => { localStorage.removeItem('userRole'); window.location.href = '/login'; }}
+              className="text-xs bg-blue-700 bg-opacity-50 hover:bg-opacity-80 px-3 py-1 rounded-full transition-colors"
+            >
+              Thoát
+            </button>
+          </div>
           <div className="mt-4 bg-white bg-opacity-20 rounded-xl p-4 backdrop-blur-sm">
             <p className="text-xs uppercase tracking-wider font-semibold text-blue-100 mb-1">Trạng thái hiện tại</p>
             <div className="flex items-center gap-2">
