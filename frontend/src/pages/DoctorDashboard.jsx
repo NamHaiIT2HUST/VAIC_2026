@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Stethoscope, User, FileText, CheckCircle, Clock, LogOut, ChevronRight, Activity, Microscope } from 'lucide-react';
 
 export default function DoctorDashboard() {
