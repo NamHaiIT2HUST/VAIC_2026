@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: hospital-db
+
+    restart: always
+
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: hospital_ai
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init_schema.sql:/docker-entrypoint-initdb.d/init_schema.sql
+
+volumes:
+  postgres_data:
