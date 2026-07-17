@@ -1,11 +1,12 @@
 package handlers
 
 import (
+	"bytes"
 	"encoding/json"
+	"io"
 	"log"
+	"net/http"
 
-	"careflow-backend/internal/config"
-	"careflow-backend/internal/models"
 	"careflow-backend/internal/services"
 	"careflow-backend/internal/websocket"
 
@@ -40,19 +41,23 @@ func (h *EventHandler) TriggerEvent(c *fiber.Ctx) error {
 
 	// Trigger FPT AI TTS for announcements
 	if event.Type == "ALERT" || event.Type == "INFO" {
-		// --- MOCK AI OPTIMIZATION IN DATABASE ---
-		// Find patient BN-2405 and update their timeline and current location
+		// --- AI OPTIMIZATION CALL ---
 		if event.Type == "ALERT" {
 			go func() {
-				// Simulate AI computation delay (since frontend waits 3s, we do it instantly here or delay 2s)
-				// Actually we can just update it immediately. The next fetch will have new data.
-				var p models.Patient
-				if err := config.DB.Where("patient_code = ?", "BN-2405").First(&p).Error; err == nil {
-					// Update Patient Location
-					p.Location = "Phòng Siêu Âm 01"
-					p.Time = "10:18 (Re-routed)"
-					config.DB.Save(&p)
+				// We call the Python FastAPI server here
+				log.Println("Received ALERT event. Will re-route via AI...")
+				
+				payloadStr := `{"patient_id":"BN-0005", "required_services":["lab", "xray", "ultrasound", "consultation"]}`
+				resp, err := http.Post("http://localhost:8000/api/ai/schedule", "application/json", bytes.NewBuffer([]byte(payloadStr)))
+				if err != nil {
+					log.Println("Failed to call AI Engine:", err)
+					return
 				}
+				defer resp.Body.Close()
+				body, _ := io.ReadAll(resp.Body)
+				log.Println("AI Engine responded with new optimal route:", string(body))
+				
+				// In a full implementation, we would parse this JSON and update the PatientWorkflow table in PostgreSQL here.
 			}()
 		}
 		// ----------------------------------------

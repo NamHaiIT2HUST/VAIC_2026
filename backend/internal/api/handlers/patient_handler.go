@@ -1,6 +1,9 @@
 package handlers
 
 import (
+	"fmt"
+	"time"
+
 	"careflow-backend/internal/config"
 	"careflow-backend/internal/models"
 	"github.com/gofiber/fiber/v2"
@@ -12,10 +15,60 @@ func NewPatientHandler() *PatientHandler {
 	return &PatientHandler{}
 }
 
+// PatientDTO matches the JSON structure expected by the React Frontend
+type PatientDTO struct {
+	PatientCode string `json:"patient_code"`
+	Name        string `json:"name"`
+	Age         int    `json:"age"`
+	Gender      string `json:"gender"`
+	Status      string `json:"status"`
+	Location    string `json:"location"`
+	Time        string `json:"time"`
+}
+
+type TimelineStepDTO struct {
+	Step      int    `json:"step"`
+	Title     string `json:"title"`
+	Status    string `json:"status"`
+	Time      string `json:"time"`
+	IsOptimal bool   `json:"is_optimal"`
+}
+
+func calculateAge(birthdate time.Time) int {
+	now := time.Now()
+	age := now.Year() - birthdate.Year()
+	if now.YearDay() < birthdate.YearDay() {
+		age--
+	}
+	return age
+}
+
+func mapToPatientDTO(p models.Patient) PatientDTO {
+	// Calculate age
+	age := calculateAge(p.DateOfBirth)
+
+	// Translate Gender
+	genderStr := "Khác"
+	if p.Gender == "Male" {
+		genderStr = "Nam"
+	} else if p.Gender == "Female" {
+		genderStr = "Nữ"
+	}
+
+	return PatientDTO{
+		PatientCode: fmt.Sprintf("BN-%04d", p.PatientID),
+		Name:        p.FullName,
+		Age:         age,
+		Gender:      genderStr,
+		Status:      p.Priority, // Map priority to status for now, or could query current workflow
+		Location:    "Đang phân luồng",
+		Time:        p.ArrivalTime.Format("15:04"),
+	}
+}
+
 func (h *PatientHandler) GetPatients(c *fiber.Ctx) error {
 	var patients []models.Patient
 	
-	// Query SQLite through GORM
 	result := config.DB.Find(&patients)
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -23,29 +76,72 @@ func (h *PatientHandler) GetPatients(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.JSON(patients)
+	var dtos []PatientDTO
+	for _, p := range patients {
+		dtos = append(dtos, mapToPatientDTO(p))
+	}
+
+	return c.JSON(dtos)
 }
 
 func (h *PatientHandler) GetPatientPathway(c *fiber.Ctx) error {
 	patientCode := c.Params("id")
 	
+	// patientCode is like "BN-0001"
+	var patientID int
+	fmt.Sscanf(patientCode, "BN-%04d", &patientID)
+
 	var patient models.Patient
-	if err := config.DB.Where("patient_code = ?", patientCode).First(&patient).Error; err != nil {
+	if err := config.DB.Where("patient_id = ?", patientID).First(&patient).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error": "Patient not found",
 		})
 	}
 
-	var timeline []models.TimelineStep
-	if err := config.DB.Where("patient_id = ?", patient.ID).Order("step asc").Find(&timeline).Error; err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to fetch pathway",
+	// Get appointment
+	var appointment models.Appointment
+	config.DB.Where("patient_id = ?", patientID).Order("appointment_time desc").First(&appointment)
+
+	var timeline []models.PatientWorkflow
+	if appointment.AppointmentID > 0 {
+		config.DB.Where("appointment_id = ?", appointment.AppointmentID).Order("planned_order asc").Find(&timeline)
+	}
+
+	var timelineDTOs []TimelineStepDTO
+	for _, t := range timeline {
+		room := ""
+		if t.RoomName != nil {
+			room = *t.RoomName
+		}
+		
+		statusStr := "pending"
+		if t.Status == "Completed" {
+			statusStr = "completed"
+		} else if t.Status == "In Progress" {
+			statusStr = "current"
+		}
+
+		timeStr := ""
+		if t.CompletedAt != nil {
+			timeStr = "Hoàn thành lúc " + t.CompletedAt.Format("15:04")
+		} else if t.EstimatedWait != nil && *t.EstimatedWait > 0 {
+			timeStr = fmt.Sprintf("Đang đợi (Dự kiến: %d phút)", *t.EstimatedWait)
+		} else {
+			timeStr = "Chờ xếp lịch"
+		}
+
+		timelineDTOs = append(timelineDTOs, TimelineStepDTO{
+			Step:      t.PlannedOrder,
+			Title:     t.StepType + " - " + room,
+			Status:    statusStr,
+			Time:      timeStr,
+			IsOptimal: true,
 		})
 	}
 
 	return c.JSON(fiber.Map{
-		"patient": patient,
-		"timeline": timeline,
+		"patient": mapToPatientDTO(patient),
+		"timeline": timelineDTOs,
 	})
 }
 

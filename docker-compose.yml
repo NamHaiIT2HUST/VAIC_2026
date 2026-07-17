@@ -11,11 +11,12 @@ services:
       POSTGRES_DB: hospital_ai
 
     ports:
-      - "5432:5432"
+      - "5433:5432"
 
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./database/init_schema.sql:/docker-entrypoint-initdb.d/init_schema.sql
+      - ./database/init_schema.sql:/docker-entrypoint-initdb.d/1_init_schema.sql
+      - ./database/seed_data.sql:/docker-entrypoint-initdb.d/2_seed_data.sql
 
 volumes:
   postgres_data:
