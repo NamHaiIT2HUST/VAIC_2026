@@ -10,10 +10,10 @@ export default function PatientApp() {
   useEffect(() => {
     const fetchPathway = async () => {
       try {
-        const res = await fetch('http://localhost:8080/api/v1/patients/BN-2405/pathway');
+        const res = await fetch('http://localhost:8080/api/v1/patients/BN-0005/pathway');
         const data = await res.json();
-        setPatient(data.patient);
-        setPatientTimeline(data.timeline);
+        setPatient(data.patient || null);
+        setPatientTimeline(Array.isArray(data.timeline) ? data.timeline : []);
       } catch (err) {
         console.error("Failed to fetch pathway", err);
       }
@@ -44,8 +44,8 @@ export default function PatientApp() {
         <div className="max-w-3xl mx-auto w-full">
           <div className="flex justify-between items-start">
             <div>
-              <h2 className="text-2xl font-bold opacity-90">Hoàng Văn E</h2>
-              <p className="text-blue-100 text-sm mt-1">Mã BN: BN-2405 | Nam, 45 tuổi</p>
+              <h2 className="text-2xl font-bold opacity-90">{patient?.name || 'Đang tải...'}</h2>
+              <p className="text-blue-100 text-sm mt-1">Mã BN: {patient?.patient_code || 'BN-...'} | {patient?.gender || 'N/A'}, {patient?.age || '--'} tuổi</p>
             </div>
             <button 
               onClick={() => { localStorage.removeItem('userRole'); window.location.href = '/login'; }}
@@ -58,7 +58,7 @@ export default function PatientApp() {
             <p className="text-sm uppercase tracking-wider font-semibold text-blue-100 mb-2">Trạng thái hiện tại</p>
             <div className="flex items-center gap-3">
               <div className="w-4 h-4 bg-green-400 rounded-full animate-pulse shadow-lg shadow-green-400/50"></div>
-              <p className="font-bold text-xl md:text-2xl">{patientTimeline.find(t => t.status === 'current')?.title}</p>
+              <p className="font-bold text-xl md:text-2xl">{(patientTimeline || []).find(t => t.status === 'current')?.title || 'Hoàn thành'}</p>
             </div>
           </div>
         </div>
@@ -92,7 +92,7 @@ export default function PatientApp() {
         </div>
         
         <div className="relative border-l-[3px] border-slate-200 ml-4 space-y-10">
-          {patientTimeline.map((item, index) => (
+          {(patientTimeline || []).map((item, index) => (
             <div key={index} className="relative pl-8">
               {/* Dot */}
               <div className={`absolute -left-[11px] top-1.5 w-5 h-5 rounded-full border-4 bg-white

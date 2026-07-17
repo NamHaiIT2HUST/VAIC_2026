@@ -11,7 +11,7 @@ export default function Dashboard() {
       try {
         const res = await fetch('http://localhost:8080/api/v1/patients');
         const data = await res.json();
-        setPatients(data);
+        setPatients(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Failed to fetch patients", err);
       }

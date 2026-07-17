@@ -9,7 +9,7 @@ export default function DoctorDashboard() {
       try {
         const res = await fetch('http://localhost:8080/api/v1/patients');
         const data = await res.json();
-        setPatients(data);
+        setPatients(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Failed to fetch patients", err);
       }
@@ -73,7 +73,7 @@ export default function DoctorDashboard() {
                       <div className="flex items-center gap-2">
                         <h4 className={`font-bold ${p.status === 'Đang khám' ? 'text-blue-800' : 'text-slate-800'}`}>{p.name}</h4>
                         {/* Priority Level Mock */}
-                        {p.patient_code === 'BN-2405' && <span className="text-[9px] bg-red-100 text-red-700 px-1 py-0.5 rounded border border-red-200 font-bold uppercase">Ưu tiên cao</span>}
+                        {p.patient_code === 'BN-0005' && <span className="text-[9px] bg-red-100 text-red-700 px-1 py-0.5 rounded border border-red-200 font-bold uppercase">Ưu tiên cao</span>}
                       </div>
                       <span className="text-xs font-mono text-slate-500">{p.patient_code}</span>
                     </div>
@@ -96,8 +96,8 @@ export default function DoctorDashboard() {
              <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-start bg-slate-50/50">
                 <div>
                   <div className="flex items-center gap-3">
-                    <h2 className="text-2xl font-bold text-slate-800">Hoàng Văn E</h2>
-                    <span className="text-sm bg-blue-100 text-blue-800 px-2 py-0.5 rounded border border-blue-200 font-mono font-medium">BN-2405</span>
+                    <h2 className="text-2xl font-bold text-slate-800">Hoàng Văn Phúc</h2>
+                    <span className="text-sm bg-blue-100 text-blue-800 px-2 py-0.5 rounded border border-blue-200 font-mono font-medium">BN-0005</span>
                   </div>
                   <p className="text-slate-600 text-sm mt-1">Giới tính: Nam | Tuổi: 45 | Nhóm máu: O+</p>
                   <p className="text-slate-800 text-sm mt-2 font-medium"><span className="text-slate-500">Lý do khám:</span> Đau tức ngực, khó thở nhẹ về đêm.</p>
