@@ -1,0 +1,98 @@
+QUY TRÌNH KHÁM CHỮA BỆNH HIỆN NAY
+ĐỐI VỚI TRƯỜNG HỢP CẤP CỨU: 
+Bước 1:  Bệnh nhân được đưa thẳng vào phòng/khoa cấp cứu bằng lối đi riêng. Ê-kíp trực thực hiện sơ cứu và hồi sức khẩn cấp; mọi thủ tục hành chính và tài chính được hoãn lại.
+Bước 2: Bác sĩ ra y lệnh xét nghiệm/CĐHA khẩn (X-quang tại giường, siêu âm khẩn...); các khoa CLS ưu tiên xử lý trước bệnh nhân thường và trả kết quả về phòng cấp cứu nhanh nhất.
+Bước 3: Tùy tình trạng, bác sĩ quyết định: cho nhập viện nội trú/mổ cấp cứu, chuyển viện tuyến trên (sau khi ổn định sinh tồn), hoặc kê đơn cho theo dõi ngoại trú.
+Bước 4: Khi bệnh nhân đã an toàn hoặc có người nhà phối hợp mới làm hồ sơ bệnh án, xuất trình thẻ BHYT/CCCD và đóng tiền tất toán/tạm ứng sau.
+
+ĐỐI VỚI TRƯỜNG HỢP KHÁM THÔNG THƯỜNG: 
+BƯỚC 1: TIẾP NHẬN THÔNG TIN
+Hình thức Online: 
+Hình thức này áp dụng cho bệnh nhân đặt lịch hẹn trước qua điện thoại, ứng dụng (app) bệnh viện, website hoặc tổng đài.
+Thông tin bệnh nhân cần cung cấp (qua hệ thống online):
+Họ và tên, ngày tháng năm sinh, giới tính, số điện thoại liên lạc, số CCCD/Mã số định danh.
+Mã số thẻ Bảo hiểm y tế (BHYT) (nếu khám BHYT).
+Lịch sử khám hoặc thông tin bác sĩ đã điều trị trước đây (nếu muốn đặt đúng bác sĩ cũ để đảm bảo tính liên tục của phác đồ).
+Lý do khám, triệu chứng hiện tại và chuyên khoa muốn đăng ký.
+Ảnh chụp Giấy hẹn tái khám hoặc Giấy chuyển viện (nếu có).
+Thông tin bệnh nhân nhận được (Online):
+Phiếu xác nhận đặt lịch hẹn thành công (chứa mã QR hoặc mã hẹn khám).
+Khung giờ hẹn khám cụ thể và số phòng khám chuyên khoa được chỉ định.
+Thủ tục khi đến viện: Bệnh nhân đến thẳng quầy ưu tiên (Quầy tiếp đón bệnh nhân đặt lịch online) để quét mã QR/mã hẹn khám (đưa cho nhân viên y tế), xác thực nhanh giấy tờ gốc (BHYT, CCCD) rồi nhận số thứ tự vào phòng khám lâm sàng, không cần xếp hàng đăng ký lại từ đầu.
+
+Hình thức Offline: 
+Hình thức này áp dụng cho bệnh nhân đến đăng ký và lấy số trực tiếp tại sảnh tiếp đón của bệnh viện.
+Thông tin bệnh nhân cần cung cấp (tại quầy tiếp đón):
+Lấy số thứ tự đăng ký khám.
+Xuất trình thẻ BHYT gốc và giấy tờ tùy thân có ảnh (CCCD).
+Nộp giấy hẹn tái khám hoặc hồ sơ chuyển viện bản gốc (nếu có).
+Nêu rõ tình trạng sức khỏe/triệu chứng để nhân viên y tế phân loại phòng khám.
+Trường hợp vượt tuyến, trái tuyến hoặc khám theo yêu cầu: Thực hiện nộp tiền tạm ứng khám bệnh tại quầy thu ngân.
+Thông tin bệnh nhân nhận được: Phiếu khám bệnh có ghi rõ số thứ tự và buồng khám chuyên khoa phù hợp.
+
+BƯỚC 2: KHÁM CHỮA BỆNH
+Trường hợp 1: Chỉ khám lâm sàng đơn thuần
+Quy trình thực hiện:
+Bệnh nhân chờ gọi tên theo số thứ tự và vào khám khi được thông báo.
+Bác sĩ khám lâm sàng, ghi nhận tình trạng bệnh, đưa ra chẩn đoán xác định và kê đơn thuốc trên hệ thống.
+Bệnh nhân nhận đơn thuốc và phiếu thanh toán để di chuyển sang khu vực tất toán.
+Thời gian trung bình: Dưới 2 giờ.
+
+Trường hợp 2: Khám lâm sàng có chỉ định Xét nghiệm
+Quy trình thực hiện:
+Bệnh nhân nhận phiếu chỉ định xét nghiệm từ bác sĩ khám.
+Di chuyển đến khu vực lấy mẫu xét nghiệm đặt tại Khoa Khám bệnh, nộp phiếu chỉ định và phối hợp lấy mẫu (máu, nước tiểu...).
+Bệnh nhân quay lại buồng khám ban đầu ngồi chờ. Mẫu bệnh phẩm được chuyển về khoa xét nghiệm để phân tích, kết quả xét nghiệm sẽ được hệ thống chuyển trả trực tiếp về buồng khám lâm sàng.
+Bác sĩ xem kết quả xét nghiệm, kết luận bệnh, kê đơn thuốc và hướng dẫn bệnh nhân đi thanh toán.
+Thời gian trung bình: Dưới 3 giờ.
+
+Trường hợp 3: Khám lâm sàng có chỉ định Chẩn đoán hình ảnh / Thăm dò chức năng
+(Ví dụ: Chụp X-quang, siêu âm, điện tim, nội soi...).
+Quy trình thực hiện:
+Bệnh nhân nhận phiếu chỉ định CĐHA/TDCN từ bác sĩ khám.
+Di chuyển đến các phòng kỹ thuật tương ứng theo sơ đồ hướng dẫn, nộp phiếu và phối hợp thực hiện theo chỉ dẫn của kỹ thuật viên.
+Chờ nhận kết quả kèm phim/ảnh chụp trực tiếp từ phòng kỹ thuật (hoặc bệnh viện liên thông trả thẳng kết quả điện tử về máy bác sĩ).
+Quay lại buồng khám ban đầu, nộp kết quả để bác sĩ chẩn đoán xác định và kê đơn thuốc.
+Thời gian trung bình: Từ 3 đến 4 giờ tùy thuộc vào số lượng kỹ thuật.
+
+Bước 3: Thanh toán viện phí (Tất toán tài chính)
+Thông tin bệnh nhân cung cấp: Phiếu thanh toán chi phí khám bệnh, chữa bệnh do phòng khám cấp.
+Quy trình thực hiện:
+Bệnh nhân xếp hàng chờ tại quầy thu viện phí.
+Đối với bệnh nhân có BHYT: Nộp tiền đồng chi trả (nếu có) và nhận lại thẻ BHYT gốc.
+Đối với bệnh nhân không có BHYT: Nộp toàn bộ số tiền viện phí phát sinh theo quy định.
+
+Bước 4: Phát và nhận thuốc (Hoàn tất xuất viện)
+Thông tin bệnh nhân cung cấp: Đơn thuốc đã được bác sĩ ký và phiếu đã đóng dấu thanh toán của bệnh viện.
+Quy trình thực hiện:
+Bệnh nhân nộp đơn thuốc tại quầy phát thuốc, nhân viên y tế kiểm tra đơn thuốc và chuẩn bị thuốc.
+Dược sĩ giao thuốc và hướng dẫn/tư vấn kỹ về liều lượng, cách dùng và các lưu ý đối với từng loại thuốc.
+Bệnh nhân thực hiện kiểm tra, đối chiếu trực tiếp số lượng, chủng loại thuốc thực tế nhận được với danh mục ghi trên đơn thuốc.
+Bệnh nhân ký nhận vào sổ cấp phát thuốc của bệnh viện và hoàn tất hành trình.
+
+ Sơ đồ: 
+Đăng ký khám (online/offline)
+  ↓
+Khám lâm sàng
+  ↓
+Có cần cận lâm sàng?
+   ┌──────────────┐
+ Không                             Có
+   │                                   │
+                                                   Kê đơn                       Xét nghiệm /
+                                                   điều trị                  Chẩn đoán hình ảnh /
+                                            Thăm dò chức năng
+   └───────┬──────┘
+      ↓
+         Đọc kết quả - Chẩn đoán xác định
+        ↓
+        Quyết định điều trị
+          (Ngoại trú / Nhập viện)
+         ↓
+          Tạm ứng viện phí
+           ↓
+              Nhận thuốc - Hướng dẫn điều trị
+           ↓
+               Kết thúc khám / Nhập viện
+
+Source: https://thuvienphapluat.vn/van-ban/The-thao-Y-te/Quyet-dinh-1313-QD-BYT-nam-2013-huong-dan-quy-trinh-kham-benh-tai-Khoa-Kham-benh-184515.aspx
