@@ -1,4 +1,4 @@
-import { BarChart3, TrendingDown, Users, Clock, AlertTriangle } from 'lucide-react';
+import { BarChart3, TrendingDown, Users, Clock, AlertTriangle, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function AdminDashboard() {
@@ -10,68 +10,79 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-slate-100 flex flex-col font-sans text-slate-800">
+      
       {/* Top Navigation */}
-      <header className="bg-white border-b border-gray-200 p-4 flex justify-between items-center px-8">
+      <header className="bg-slate-900 text-white border-b border-slate-700 px-6 py-3 flex justify-between items-center shadow-md">
         <div className="flex items-center gap-3">
-          <div className="bg-orange-500 text-white p-2 rounded-lg"><BarChart3 size={24} /></div>
-          <div>
-            <h1 className="text-xl font-black text-gray-800">CareFlow Admin</h1>
-            <p className="text-xs text-gray-500">Trung tâm Điều hành Toàn cục</p>
+          <BarChart3 size={28} className="text-blue-400" />
+          <div className="border-l border-slate-700 pl-3">
+            <h1 className="text-base font-bold tracking-widest">TRUNG TÂM ĐIỀU HÀNH HIS</h1>
+            <p className="text-[10px] text-slate-400 font-medium uppercase tracking-widest">Ban Giám Đốc</p>
           </div>
         </div>
-        <button onClick={handleLogout} className="text-gray-500 hover:text-red-500 font-bold transition-colors">
-          Đăng xuất
+        <button onClick={handleLogout} className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-semibold py-1.5 px-3 rounded flex items-center gap-2 transition-colors">
+          <LogOut size={16} /> Thoát
         </button>
       </header>
 
-      <div className="flex-1 p-8 max-w-7xl mx-auto w-full">
+      <div className="flex-1 p-6 max-w-[1400px] mx-auto w-full">
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4">
-            <div className="bg-blue-50 text-blue-600 p-4 rounded-2xl"><Users size={28} /></div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white p-5 rounded-md border border-slate-200 shadow-sm flex items-center gap-4">
+            <div className="bg-blue-50 text-blue-600 p-3 rounded-md"><Users size={24} /></div>
             <div>
-              <p className="text-sm text-gray-500 font-medium">Tổng Bệnh Nhân</p>
-              <p className="text-3xl font-black text-gray-800">1,248</p>
+              <p className="text-xs text-slate-500 font-bold uppercase tracking-wide">Tổng Lượt Tiếp Nhận</p>
+              <p className="text-2xl font-black text-slate-800 mt-1">1,248</p>
             </div>
           </div>
-          <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4">
-            <div className="bg-green-50 text-green-600 p-4 rounded-2xl"><TrendingDown size={28} /></div>
+          
+          <div className="bg-white p-5 rounded-md border border-slate-200 shadow-sm flex items-center gap-4">
+            <div className="bg-teal-50 text-teal-600 p-3 rounded-md"><TrendingDown size={24} /></div>
             <div>
-              <p className="text-sm text-gray-500 font-medium">Thời gian chờ (TB)</p>
-              <p className="text-3xl font-black text-gray-800">24 <span className="text-lg text-gray-400">phút</span></p>
-              <p className="text-xs text-green-600 font-bold mt-1">▼ Giảm 15% nhờ AI</p>
+              <p className="text-xs text-slate-500 font-bold uppercase tracking-wide">Thời Gian Chờ (TB)</p>
+              <div className="flex items-baseline gap-2 mt-1">
+                <p className="text-2xl font-black text-slate-800">24 <span className="text-sm font-semibold text-slate-500">phút</span></p>
+                <span className="text-[10px] bg-teal-100 text-teal-800 font-bold px-1.5 py-0.5 rounded">▼ 15%</span>
+              </div>
             </div>
           </div>
-          <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4">
-            <div className="bg-purple-50 text-purple-600 p-4 rounded-2xl"><Clock size={28} /></div>
+          
+          <div className="bg-white p-5 rounded-md border border-slate-200 shadow-sm flex items-center gap-4">
+            <div className="bg-indigo-50 text-indigo-600 p-3 rounded-md"><Clock size={24} /></div>
             <div>
-              <p className="text-sm text-gray-500 font-medium">Hiệu suất phòng máy</p>
-              <p className="text-3xl font-black text-gray-800">92%</p>
+              <p className="text-xs text-slate-500 font-bold uppercase tracking-wide">Công Suất Phòng Máy</p>
+              <p className="text-2xl font-black text-slate-800 mt-1">92%</p>
             </div>
           </div>
-          <div className="bg-white p-6 rounded-3xl border border-red-100 shadow-sm flex items-center gap-4 bg-red-50">
-            <div className="bg-red-100 text-red-600 p-4 rounded-2xl"><AlertTriangle size={28} /></div>
+          
+          <div className="bg-white p-5 rounded-md border border-red-200 shadow-sm flex items-center gap-4 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-1 h-full bg-red-500"></div>
+            <div className="bg-red-50 text-red-600 p-3 rounded-md ml-2"><AlertTriangle size={24} /></div>
             <div>
-              <p className="text-sm text-red-500 font-medium">Cảnh báo điểm nghẽn</p>
-              <p className="text-xl font-bold text-red-700">Phòng Lấy Máu</p>
-              <p className="text-xs text-red-600 font-bold mt-1">Đang chờ: 15 người</p>
+              <p className="text-xs text-red-500 font-bold uppercase tracking-wide">Cảnh Báo Nóng</p>
+              <p className="text-base font-bold text-slate-800 mt-1">Khoa Cận Lâm Sàng</p>
+              <p className="text-[10px] text-red-600 font-bold mt-0.5">Quá tải X-Quang 02 (15 BN đợi)</p>
             </div>
           </div>
         </div>
 
         {/* Charts Mockup */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm h-[400px] flex flex-col">
-            <h3 className="font-bold text-gray-800 mb-4">Lưu lượng Bệnh Nhân theo Giờ</h3>
-            <div className="flex-1 bg-slate-50 rounded-2xl border border-dashed border-gray-200 flex items-center justify-center text-gray-400">
-              [Khu vực gắn Biểu đồ Line Chart]
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-white rounded-md border border-slate-200 shadow-sm h-[400px] flex flex-col">
+            <div className="px-5 py-3 border-b border-slate-200 bg-slate-50">
+              <h3 className="font-bold text-slate-700 text-sm">LƯU LƯỢNG BỆNH NHÂN THEO GIỜ</h3>
+            </div>
+            <div className="flex-1 m-4 bg-slate-50 border border-dashed border-slate-200 flex items-center justify-center text-slate-400 text-sm font-medium">
+              [Vùng hiển thị Biểu đồ Line Chart]
             </div>
           </div>
-          <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm h-[400px] flex flex-col">
-            <h3 className="font-bold text-gray-800 mb-4">Phân bổ Bệnh Nhân tại các Phòng ban</h3>
-            <div className="flex-1 bg-slate-50 rounded-2xl border border-dashed border-gray-200 flex items-center justify-center text-gray-400">
-              [Khu vực gắn Biểu đồ Bar Chart]
+          <div className="bg-white rounded-md border border-slate-200 shadow-sm h-[400px] flex flex-col">
+            <div className="px-5 py-3 border-b border-slate-200 bg-slate-50">
+              <h3 className="font-bold text-slate-700 text-sm">PHÂN BỔ BỆNH NHÂN THEO KHOA PHÒNG</h3>
+            </div>
+            <div className="flex-1 m-4 bg-slate-50 border border-dashed border-slate-200 flex items-center justify-center text-slate-400 text-sm font-medium">
+              [Vùng hiển thị Biểu đồ Bar Chart]
             </div>
           </div>
         </div>
