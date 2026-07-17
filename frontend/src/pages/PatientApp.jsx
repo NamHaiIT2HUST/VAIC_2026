@@ -120,9 +120,19 @@ export default function PatientApp() {
                   )}
                 </div>
                 
-                <p className={`text-sm md:text-base mt-2 font-medium ${item.status === 'current' ? 'text-blue-600' : 'text-slate-500'}`}>
-                  {item.time}
-                </p>
+                <div className="mt-2">
+                  <p className={`text-sm md:text-base font-medium flex items-center gap-2 ${item.status === 'current' ? 'text-blue-600' : 'text-slate-500'}`}>
+                    <Clock size={16} /> 
+                    <span className="font-bold">Ước tính chờ:</span> {item.time}
+                  </p>
+                  
+                  {/* Điều kiện tiên quyết (Fasting requirement) */}
+                  {item.title.toLowerCase().includes('máu') && (
+                    <p className="text-[11px] font-semibold text-red-600 mt-2 bg-red-50 border border-red-100 inline-block px-2 py-1 rounded">
+                      ⚠ Cảnh báo lâm sàng: Yêu cầu nhịn ăn 8 tiếng trước khi lấy mẫu
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           ))}

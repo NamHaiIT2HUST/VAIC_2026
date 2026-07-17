@@ -70,7 +70,11 @@ export default function DoctorDashboard() {
                 {patients.map(p => (
                   <li key={p.patient_code} className={`p-4 hover:bg-slate-50 cursor-pointer transition-colors ${p.status === 'Đang khám' ? 'bg-blue-50/50 border-l-4 border-blue-500' : 'border-l-4 border-transparent'}`}>
                     <div className="flex justify-between items-start mb-1">
-                      <h4 className={`font-bold ${p.status === 'Đang khám' ? 'text-blue-800' : 'text-slate-800'}`}>{p.name}</h4>
+                      <div className="flex items-center gap-2">
+                        <h4 className={`font-bold ${p.status === 'Đang khám' ? 'text-blue-800' : 'text-slate-800'}`}>{p.name}</h4>
+                        {/* Priority Level Mock */}
+                        {p.patient_code === 'BN-2405' && <span className="text-[9px] bg-red-100 text-red-700 px-1 py-0.5 rounded border border-red-200 font-bold uppercase">Ưu tiên cao</span>}
+                      </div>
                       <span className="text-xs font-mono text-slate-500">{p.patient_code}</span>
                     </div>
                     <div className="flex justify-between items-center mt-2">
