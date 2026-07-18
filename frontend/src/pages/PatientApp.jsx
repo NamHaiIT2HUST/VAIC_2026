@@ -7,6 +7,7 @@ export default function PatientApp() {
   const [patientTimeline, setPatientTimeline] = useState([]);
   const [aiMessage, setAiMessage] = useState('AI CareFlow đã tối ưu lộ trình: Bạn sẽ chụp X-Quang trong lúc chờ kết quả máu để tiết kiệm 45 phút chờ đợi.');
   const [doctorNote, setDoctorNote] = useState('');
+  const [alertToast, setAlertToast] = useState(null);
 
   useEffect(() => {
     const fetchPathway = async () => {
@@ -21,14 +22,17 @@ export default function PatientApp() {
     };
     fetchPathway();
 
-    const socket = new WebSocket('ws://localhost:8080/ws');
+    const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8080/ws';
+    const socket = new WebSocket(wsUrl);
     socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
         if (data.type === 'ALERT') {
+          setAlertToast(data.message);
           setAiMessage('⚠ Cảnh báo: ' + data.message + ' AI đang tự động tính toán lại lộ trình của bạn để tránh ùn tắc...');
           setTimeout(() => {
             setAiMessage('⚡ AI CareFlow đã sắp xếp lại lịch trình để tránh ùn tắc. Tiết kiệm 30 phút.');
+            setAlertToast(null);
             fetchPathway();
           }, 3000);
         } else if (data.type === 'WORKFLOW_UPDATED') {
@@ -56,6 +60,19 @@ export default function PatientApp() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col relative pb-20">
       
+      {/* Toast Alert */}
+      {alertToast && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 animate-in slide-in-from-top fade-in duration-300 w-[90%] max-w-md">
+          <div className="bg-red-500 text-white p-4 rounded-xl shadow-lg border border-red-600 flex items-start gap-3">
+            <Zap className="flex-shrink-0 animate-pulse" />
+            <div>
+              <h4 className="font-bold">CẢNH BÁO / KHẨN CẤP</h4>
+              <p className="text-sm mt-1">{alertToast}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-blue-600 text-white pt-8 pb-6 px-6 shadow-md z-10 relative md:pt-10">
         <div className="max-w-3xl mx-auto w-full">
@@ -105,15 +122,19 @@ export default function PatientApp() {
           </div>
         </div>
 
-        {/* Doctor Note */}
+        {/* Doctor Note Chat Bubble */}
         {doctorNote && (
-          <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-xl shadow-sm flex gap-4 items-start mb-4 animate-in fade-in zoom-in duration-300">
-            <div className="bg-yellow-100 text-yellow-600 p-2 rounded-lg">
-              <FileText size={24} />
+          <div className="flex items-end gap-3 mb-6 mt-2 px-2 animate-in fade-in slide-in-from-left duration-500">
+            <div className="w-10 h-10 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center flex-shrink-0 relative">
+              <FileText size={20} className="text-blue-600" />
+              <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
             </div>
-            <div>
-              <h4 className="font-bold text-yellow-900">Lời dặn của Bác sĩ</h4>
-              <p className="text-sm text-yellow-800 mt-1 italic font-medium">"{doctorNote}"</p>
+            <div className="bg-white border border-slate-200 p-4 rounded-2xl rounded-bl-none shadow-sm max-w-[85%] relative">
+              <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2">
+                Bác sĩ điều trị
+                <span className="text-[10px] text-slate-400 font-normal">{new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+              </h4>
+              <p className="text-slate-700 mt-1">{doctorNote}</p>
             </div>
           </div>
         )}
@@ -146,9 +167,24 @@ export default function PatientApp() {
                  <rect x="270" y="110" width="100" height="60" rx="4" fill={patientTimeline.some(t => t.title.includes('Sinh hóa') && t.status === 'current') ? '#dbeafe' : '#f8fafc'} stroke={patientTimeline.some(t => t.title.includes('Sinh hóa') && t.status === 'current') ? '#3b82f6' : '#cbd5e1'} strokeWidth="2" />
                  <text x="320" y="145" textAnchor="middle" fontSize="12" fill="#334155" fontWeight="bold">Xét Nghiệm</text>
 
-                 {/* Current Point Dot (Fake Path logic) */}
-                 <circle cx="120" cy="100" r="6" fill="#3b82f6" className="animate-ping" />
-                 <circle cx="120" cy="100" r="4" fill="#2563eb" />
+                 {/* Current Point Dot */}
+                 {(() => {
+                   const currentStep = patientTimeline.find(t => t.status === 'current');
+                   let cx = 70; // Default: Sảnh Chờ
+                   let cy = 100;
+                   if (currentStep) {
+                     if (currentStep.title.includes('Khám')) { cx = 190; cy = 60; }
+                     else if (currentStep.title.includes('X-Quang')) { cx = 320; cy = 60; }
+                     else if (currentStep.title.includes('Siêu âm')) { cx = 190; cy = 140; }
+                     else if (currentStep.title.includes('Sinh hóa') || currentStep.title.includes('Xét nghiệm')) { cx = 320; cy = 140; }
+                   }
+                   return (
+                     <g>
+                       <circle cx={cx} cy={cy} r="8" fill="#3b82f6" className="animate-ping" />
+                       <circle cx={cx} cy={cy} r="5" fill="#2563eb" />
+                     </g>
+                   );
+                 })()}
               </svg>
            </div>
         </div>
@@ -181,7 +217,7 @@ export default function PatientApp() {
               <div className={`p-5 rounded-xl shadow-sm border transition-all duration-300 relative overflow-hidden
                 ${item.status === 'current' ? 'bg-white border-blue-300 shadow-blue-100/50 scale-105 transform origin-left md:scale-100 md:-translate-y-1' : 
                   item.status === 'completed' ? 'bg-slate-50 border-slate-200 opacity-90' : 
-                  'bg-white border-slate-100 border-dashed opacity-60'}`}
+                  'bg-white border-slate-200 opacity-70'}`}
               >
                 {item.status === 'current' && <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>}
                 

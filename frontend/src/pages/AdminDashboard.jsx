@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BarChart3, TrendingDown, Users, Clock, AlertTriangle, LogOut, Zap } from 'lucide-react';
+import { BarChart3, TrendingDown, Users, Clock, AlertTriangle, LogOut, Zap, Activity } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 
@@ -169,6 +169,37 @@ export default function AdminDashboard() {
               </div>
            </div>
         </div>
+
+        {/* Live Room Status (TỔNG QUÁT HỆ THỐNG) */}
+        <div className="mt-6 bg-white rounded-md border border-slate-200 shadow-sm p-6 mb-10">
+           <h3 className="text-slate-800 font-bold mb-4 flex items-center gap-2">
+             <Activity className="text-teal-500" size={20} /> Tổng quan Trạng thái Phòng ban (Real-time)
+           </h3>
+           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="border border-slate-100 bg-slate-50 p-4 rounded text-center">
+                 <p className="text-xs font-bold text-slate-500 mb-2 uppercase">Lâm sàng</p>
+                 <div className="text-3xl font-black text-slate-800">4</div>
+                 <p className="text-xs text-green-600 mt-1 font-medium">Bình thường</p>
+              </div>
+              <div className="border border-slate-100 bg-slate-50 p-4 rounded text-center relative overflow-hidden">
+                 <div className="absolute top-0 left-0 w-full h-1 bg-red-500"></div>
+                 <p className="text-xs font-bold text-slate-500 mb-2 uppercase">X-Quang</p>
+                 <div className="text-3xl font-black text-slate-800">15</div>
+                 <p className="text-xs text-red-500 mt-1 font-bold animate-pulse">Đang ùn tắc</p>
+              </div>
+              <div className="border border-slate-100 bg-slate-50 p-4 rounded text-center">
+                 <p className="text-xs font-bold text-slate-500 mb-2 uppercase">Siêu âm</p>
+                 <div className="text-3xl font-black text-slate-800">2</div>
+                 <p className="text-xs text-green-600 mt-1 font-medium">Trống</p>
+              </div>
+              <div className="border border-slate-100 bg-slate-50 p-4 rounded text-center">
+                 <p className="text-xs font-bold text-slate-500 mb-2 uppercase">Xét nghiệm</p>
+                 <div className="text-3xl font-black text-slate-800">8</div>
+                 <p className="text-xs text-amber-500 mt-1 font-medium">Hoạt động cao</p>
+              </div>
+           </div>
+        </div>
+
       </div>
     </div>
   );
