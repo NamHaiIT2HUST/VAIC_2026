@@ -166,9 +166,24 @@ export default function PatientApp() {
                  <rect x="270" y="110" width="100" height="60" rx="4" fill={patientTimeline.some(t => t.title.includes('Sinh hóa') && t.status === 'current') ? '#dbeafe' : '#f8fafc'} stroke={patientTimeline.some(t => t.title.includes('Sinh hóa') && t.status === 'current') ? '#3b82f6' : '#cbd5e1'} strokeWidth="2" />
                  <text x="320" y="145" textAnchor="middle" fontSize="12" fill="#334155" fontWeight="bold">Xét Nghiệm</text>
 
-                 {/* Current Point Dot (Fake Path logic) */}
-                 <circle cx="120" cy="100" r="6" fill="#3b82f6" className="animate-ping" />
-                 <circle cx="120" cy="100" r="4" fill="#2563eb" />
+                 {/* Current Point Dot */}
+                 {(() => {
+                   const currentStep = patientTimeline.find(t => t.status === 'current');
+                   let cx = 70; // Default: Sảnh Chờ
+                   let cy = 100;
+                   if (currentStep) {
+                     if (currentStep.title.includes('Khám')) { cx = 190; cy = 60; }
+                     else if (currentStep.title.includes('X-Quang')) { cx = 320; cy = 60; }
+                     else if (currentStep.title.includes('Siêu âm')) { cx = 190; cy = 140; }
+                     else if (currentStep.title.includes('Sinh hóa') || currentStep.title.includes('Xét nghiệm')) { cx = 320; cy = 140; }
+                   }
+                   return (
+                     <g>
+                       <circle cx={cx} cy={cy} r="8" fill="#3b82f6" className="animate-ping" />
+                       <circle cx={cx} cy={cy} r="5" fill="#2563eb" />
+                     </g>
+                   );
+                 })()}
               </svg>
            </div>
         </div>
@@ -192,7 +207,7 @@ export default function PatientApp() {
               <div className={`absolute -left-[11px] top-1.5 w-5 h-5 rounded-full border-4 bg-white
                 ${item.status === 'completed' ? 'border-green-500 bg-green-500' : 
                   item.status === 'current' ? 'border-blue-500 bg-blue-100 animate-pulse' : 
-                  'border-blue-400'}`}
+                  'border-slate-300'}`}
               >
                 {item.status === 'completed' && <CheckCircle2 size={12} className="text-white absolute -top-0.5 -left-0.5" />}
               </div>
@@ -201,7 +216,7 @@ export default function PatientApp() {
               <div className={`p-5 rounded-xl shadow-sm border transition-all duration-300 relative overflow-hidden
                 ${item.status === 'current' ? 'bg-white border-blue-300 shadow-blue-100/50 scale-105 transform origin-left md:scale-100 md:-translate-y-1' : 
                   item.status === 'completed' ? 'bg-slate-50 border-slate-200 opacity-90' : 
-                  'bg-blue-50/50 border-blue-200 opacity-80'}`}
+                  'bg-white border-slate-200 opacity-70'}`}
               >
                 {item.status === 'current' && <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>}
                 
