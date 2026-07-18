@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Activity, ShieldPlus, AlertOctagon, LogOut, Search, ChevronRight } from 'lucide-react';
+import { Activity, ShieldPlus, AlertOctagon, LogOut, Search, ChevronRight, AlertTriangle } from 'lucide-react';
 
 export default function Dashboard() {
   const [alert, setAlert] = useState(null);
@@ -195,7 +195,18 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="px-6 py-4 border-t bg-slate-50 flex justify-end gap-3">
-              <button className="px-4 py-2 bg-slate-200 text-slate-700 font-bold text-sm rounded hover:bg-slate-300">Ghi đè lộ trình</button>
+              <button 
+                onClick={async () => {
+                  try {
+                    await fetch(`http://localhost:8080/api/v1/patients/${selectedPatient.patient_code}/prioritize`, { method: 'POST' });
+                    alert('Đã thiết lập ưu tiên cao nhất cho bệnh nhân!');
+                    setSelectedPatient(null);
+                  } catch(err) {}
+                }}
+                className="px-4 py-2 bg-red-100 text-red-700 font-bold text-sm rounded hover:bg-red-200 flex items-center gap-2">
+                <AlertTriangle size={16} /> Ưu tiên khám ngay (VIP)
+              </button>
+              <button className="px-4 py-2 bg-slate-200 text-slate-700 font-bold text-sm rounded hover:bg-slate-300">Tạm dừng bước này</button>
               <button onClick={() => setSelectedPatient(null)} className="px-4 py-2 bg-blue-600 text-white font-bold text-sm rounded hover:bg-blue-700">Đóng</button>
             </div>
           </div>

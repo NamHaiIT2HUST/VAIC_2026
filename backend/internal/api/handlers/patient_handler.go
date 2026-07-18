@@ -192,6 +192,7 @@ func (h *PatientHandler) GetStats(c *fiber.Ctx) error {
 
 type PrescribeRequest struct {
 	Services []string `json:"services"`
+	Note     string   `json:"note"`
 }
 
 type AIResponse struct {
@@ -256,10 +257,20 @@ func (h *PatientHandler) PrescribeServices(c *fiber.Ctx) error {
 	}
 	
 	if h.hub != nil {
-		h.hub.Broadcast([]byte(fmt.Sprintf(`{"type": "WORKFLOW_UPDATED", "patient_code": "%s"}`, patientCode)))
+		h.hub.Broadcast([]byte(fmt.Sprintf(`{"type": "WORKFLOW_UPDATED", "patient_code": "%s", "note": "%s"}`, patientCode, req.Note)))
 	}
 	
 	return c.JSON(fiber.Map{"status": "success", "message": "AI Re-scheduled"})
+}
+
+func (h *PatientHandler) PrioritizePatient(c *fiber.Ctx) error {
+	patientCode := c.Params("id")
+	// Giả lập logic AI prioritize ở backend
+	// Thay vì gọi AI engine thực sự cho demo, ta chỉ phát một event để UI phản hồi
+	if h.hub != nil {
+		h.hub.Broadcast([]byte(fmt.Sprintf(`{"type": "ALERT", "message": "Bệnh nhân %s được đánh dấu CẤP CỨU / VIP."}`, patientCode)))
+	}
+	return c.JSON(fiber.Map{"status": "success", "message": "Patient prioritized"})
 }
 
 func (h *PatientHandler) CallPatient(c *fiber.Ctx) error {

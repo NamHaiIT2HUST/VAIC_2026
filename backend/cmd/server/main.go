@@ -54,6 +54,7 @@ func main() {
 	app.Post("/api/v1/patients/:id/prescribe", patientHandler.PrescribeServices)
 	app.Post("/api/v1/patients/:id/call", patientHandler.CallPatient)
 	app.Post("/api/v1/patients/:id/complete", patientHandler.CompletePatientStep)
+	app.Post("/api/v1/patients/:id/prioritize", patientHandler.PrioritizePatient)
 	app.Get("/api/v1/stats", patientHandler.GetStats)
 	app.Post("/api/v1/events/trigger", eventHandler.TriggerEvent)
 

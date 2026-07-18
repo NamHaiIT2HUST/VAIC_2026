@@ -3,6 +3,8 @@ import { Stethoscope, User, FileText, CheckCircle, Clock, LogOut, ChevronRight, 
 
 export default function DoctorDashboard() {
   const [patients, setPatients] = useState([]);
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [note, setNote] = useState('');
 
   useEffect(() => {
     const fetchPatients = async () => {
@@ -17,12 +19,12 @@ export default function DoctorDashboard() {
     fetchPatients();
   }, []);
 
-  const handlePrescribe = async (serviceCode) => {
+    if (!selectedPatient) return alert('Vui lòng chọn bệnh nhân');
     try {
-      const res = await fetch('http://localhost:8080/api/v1/patients/BN-0005/prescribe', {
+      const res = await fetch(`http://localhost:8080/api/v1/patients/${selectedPatient.patient_code}/prescribe`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ services: [serviceCode] })
+        body: JSON.stringify({ services: [serviceCode], note })
       });
       if (res.ok) {
         alert('Đã chỉ định ' + serviceCode + ' thành công! AI đang lên lịch trình mới.');
@@ -36,16 +38,19 @@ export default function DoctorDashboard() {
   };
 
   const handleCallPatient = async () => {
+    if (!selectedPatient) return;
     try {
-      await fetch('http://localhost:8080/api/v1/patients/BN-0005/call', { method: 'POST' });
-      alert('Đã gọi bệnh nhân BN-0005');
+      await fetch(`http://localhost:8080/api/v1/patients/${selectedPatient.patient_code}/call`, { method: 'POST' });
+      alert(`Đã gọi bệnh nhân ${selectedPatient.patient_code}`);
     } catch (err) {}
   };
 
   const handleComplete = async () => {
+    if (!selectedPatient) return;
     try {
-      await fetch('http://localhost:8080/api/v1/patients/BN-0005/complete', { method: 'POST' });
+      await fetch(`http://localhost:8080/api/v1/patients/${selectedPatient.patient_code}/complete`, { method: 'POST' });
       alert('Đã kết luận và cập nhật lộ trình!');
+      setSelectedPatient(null);
     } catch (err) {}
   };
 
@@ -100,10 +105,13 @@ export default function DoctorDashboard() {
             <div className="flex-1 overflow-y-auto">
               <ul className="divide-y divide-slate-100">
                 {patients.map(p => (
-                  <li key={p.patient_code} className={`p-4 hover:bg-slate-50 cursor-pointer transition-colors ${p.status === 'Đang khám' ? 'bg-blue-50/50 border-l-4 border-blue-500' : 'border-l-4 border-transparent'}`}>
+                  <li 
+                    key={p.patient_code} 
+                    onClick={() => setSelectedPatient(p)}
+                    className={`p-4 hover:bg-slate-50 cursor-pointer transition-colors ${selectedPatient?.patient_code === p.patient_code ? 'bg-blue-50/50 border-l-4 border-blue-500' : 'border-l-4 border-transparent'}`}>
                     <div className="flex justify-between items-start mb-1">
                       <div className="flex items-center gap-2">
-                        <h4 className={`font-bold ${p.status === 'Đang khám' ? 'text-blue-800' : 'text-slate-800'}`}>{p.name}</h4>
+                        <h4 className={`font-bold ${selectedPatient?.patient_code === p.patient_code ? 'text-blue-800' : 'text-slate-800'}`}>{p.name}</h4>
                         {/* Priority Level Mock */}
                         {p.patient_code === 'BN-0005' && <span className="text-[9px] bg-red-100 text-red-700 px-1 py-0.5 rounded border border-red-200 font-bold uppercase">Ưu tiên cao</span>}
                       </div>
@@ -125,21 +133,23 @@ export default function DoctorDashboard() {
           <div className="lg:col-span-8 bg-white rounded-lg border border-slate-200 shadow-sm flex flex-col h-full">
              
              {/* Patient Info Header */}
-             <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-start bg-slate-50/50">
-                <div>
-                  <div className="flex items-center gap-3">
-                    <h2 className="text-2xl font-bold text-slate-800">Hoàng Văn Phúc</h2>
-                    <span className="text-sm bg-blue-100 text-blue-800 px-2 py-0.5 rounded border border-blue-200 font-mono font-medium">BN-0005</span>
+             {selectedPatient ? (
+              <>
+               <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-start bg-slate-50/50">
+                  <div>
+                    <div className="flex items-center gap-3">
+                      <h2 className="text-2xl font-bold text-slate-800">{selectedPatient.name}</h2>
+                      <span className="text-sm bg-blue-100 text-blue-800 px-2 py-0.5 rounded border border-blue-200 font-mono font-medium">{selectedPatient.patient_code}</span>
+                    </div>
+                    <p className="text-slate-600 text-sm mt-1">Giới tính: {selectedPatient.gender} | Tuổi: {selectedPatient.age}</p>
+                    <p className="text-slate-800 text-sm mt-2 font-medium"><span className="text-slate-500">Trạng thái hiện tại:</span> {selectedPatient.status}</p>
                   </div>
-                  <p className="text-slate-600 text-sm mt-1">Giới tính: Nam | Tuổi: 45 | Nhóm máu: O+</p>
-                  <p className="text-slate-800 text-sm mt-2 font-medium"><span className="text-slate-500">Lý do khám:</span> Đau tức ngực, khó thở nhẹ về đêm.</p>
-                </div>
-                <button 
-                  onClick={handleCallPatient}
-                  className="bg-blue-700 text-white text-sm font-bold py-2 px-4 rounded hover:bg-blue-800 transition-colors shadow-sm flex items-center gap-2">
-                  <Activity size={16} /> Gọi Bệnh Nhân
-                </button>
-             </div>
+                  <button 
+                    onClick={handleCallPatient}
+                    className="bg-blue-700 text-white text-sm font-bold py-2 px-4 rounded hover:bg-blue-800 transition-colors shadow-sm flex items-center gap-2">
+                    <Activity size={16} /> Gọi Bệnh Nhân
+                  </button>
+               </div>
 
              {/* Clinical Results Area */}
              <div className="flex-1 p-6 flex flex-col gap-4">
@@ -167,28 +177,46 @@ export default function DoctorDashboard() {
              </div>
 
              {/* Action Buttons */}
-             <div className="p-6 border-t border-slate-200 bg-slate-50 flex gap-3">
-                <button 
-                  onClick={() => handlePrescribe('lab')}
-                  className="flex-1 bg-white text-slate-700 border border-slate-300 text-sm font-bold py-2.5 rounded hover:bg-slate-100 transition-colors flex items-center justify-center gap-2">
-                  + Chỉ định Sinh Hóa
-                </button>
-                <button 
-                  onClick={() => handlePrescribe('xray')}
-                  className="flex-1 bg-white text-slate-700 border border-slate-300 text-sm font-bold py-2.5 rounded hover:bg-slate-100 transition-colors flex items-center justify-center gap-2">
-                  + Chỉ định X-Quang
-                </button>
-                <button 
-                  onClick={() => handlePrescribe('ultrasound')}
-                  className="flex-1 bg-white text-slate-700 border border-slate-300 text-sm font-bold py-2.5 rounded hover:bg-slate-100 transition-colors flex items-center justify-center gap-2">
-                  + Chỉ định Siêu âm
-                </button>
-                <button 
-                  onClick={handleComplete}
-                  className="flex-1 bg-teal-600 text-white text-sm font-bold py-2.5 rounded hover:bg-teal-700 transition-colors shadow-sm flex items-center justify-center gap-2">
-                  <CheckCircle size={18} /> Kết luận & Kê Đơn
-                </button>
+             <div className="p-6 border-t border-slate-200 bg-slate-50">
+                <div className="mb-4">
+                  <label className="block text-sm font-bold text-slate-700 mb-1">Lời dặn của Bác sĩ (hiển thị trên app bệnh nhân)</label>
+                  <textarea 
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    className="w-full border border-slate-300 rounded p-2 text-sm focus:ring focus:ring-blue-200 focus:outline-none" 
+                    rows="2" 
+                    placeholder="VD: Nhịn ăn sáng, uống nhiều nước trước khi siêu âm..."></textarea>
+                </div>
+                <div className="flex gap-3">
+                  <button 
+                    onClick={() => handlePrescribe('lab')}
+                    className="flex-1 bg-white text-slate-700 border border-slate-300 text-sm font-bold py-2.5 rounded hover:bg-slate-100 transition-colors flex items-center justify-center gap-2">
+                    + Chỉ định Sinh Hóa
+                  </button>
+                  <button 
+                    onClick={() => handlePrescribe('xray')}
+                    className="flex-1 bg-white text-slate-700 border border-slate-300 text-sm font-bold py-2.5 rounded hover:bg-slate-100 transition-colors flex items-center justify-center gap-2">
+                    + Chỉ định X-Quang
+                  </button>
+                  <button 
+                    onClick={() => handlePrescribe('ultrasound')}
+                    className="flex-1 bg-white text-slate-700 border border-slate-300 text-sm font-bold py-2.5 rounded hover:bg-slate-100 transition-colors flex items-center justify-center gap-2">
+                    + Chỉ định Siêu âm
+                  </button>
+                  <button 
+                    onClick={handleComplete}
+                    className="flex-1 bg-teal-600 text-white text-sm font-bold py-2.5 rounded hover:bg-teal-700 transition-colors shadow-sm flex items-center justify-center gap-2">
+                    <CheckCircle size={18} /> Kết luận & Kê Đơn
+                  </button>
+                </div>
              </div>
+             </>
+             ) : (
+               <div className="flex-1 flex flex-col items-center justify-center text-slate-400">
+                 <User size={48} className="mb-4 text-slate-300" />
+                 <p>Chọn một bệnh nhân từ danh sách hàng đợi để khám</p>
+               </div>
+             )}
 
           </div>
         </div>
