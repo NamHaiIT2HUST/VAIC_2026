@@ -1,14 +1,11 @@
-"""
-AI Patient Journey Orchestrator - MVP Engine
-"""
 import math
 from ortools.sat.python import cp_model
 
 HOSPITAL_CONFIG = {
-    "ultrasound": {"count": 1, "base_duration": 15},
-    "lab": {"count": 1, "base_duration": 10},
-    "xray": {"count": 1, "base_duration": 10},
-    "consultation": {"count": 3, "base_duration": 20},
+    "ultrasound": {"count": 1, "base_duration": 15, "name": "Siêu âm"},
+    "lab": {"count": 1, "base_duration": 10, "name": "Xét nghiệm Sinh hóa"},
+    "xray": {"count": 1, "base_duration": 10, "name": "X-Quang"},
+    "consultation": {"count": 3, "base_duration": 20, "name": "Khám lâm sàng"},
 }
 
 SLACK_FACTORS = {
@@ -20,9 +17,8 @@ SLACK_FACTORS = {
 
 class DurationPredictor:
     def predict(self, station_type: str) -> tuple[float, float]:
-        """Returns (predicted_duration_min, slack_duration_min)"""
-        base = HOSPITAL_CONFIG[station_type]["base_duration"]
-        slack = base * SLACK_FACTORS[station_type]
+        base = HOSPITAL_CONFIG.get(station_type, {"base_duration": 15})["base_duration"]
+        slack = base * SLACK_FACTORS.get(station_type, 0.1)
         return base, slack
 
 class JourneyScheduler:
@@ -52,9 +48,10 @@ class JourneyScheduler:
                 prev_srv = sorted_services[idx - 1]
                 model.Add(start_var >= tasks[prev_srv]["end"])
                 
-        # Objective: minimize makespan (end of last task)
-        last_srv = sorted_services[-1]
-        model.Minimize(tasks[last_srv]["end"])
+        # Objective: minimize makespan
+        if sorted_services:
+            last_srv = sorted_services[-1]
+            model.Minimize(tasks[last_srv]["end"])
         
         solver = cp_model.CpSolver()
         status = solver.Solve(model)
@@ -63,16 +60,13 @@ class JourneyScheduler:
             result = []
             for srv in sorted_services:
                 result.append({
-                    "task_id": f"{srv}-001",
-                    "station": srv,
-                    "time_start": solver.Value(tasks[srv]["start"]),
-                    "time_end": solver.Value(tasks[srv]["end"])
+                    "station_code": srv,
+                    "station_name": HOSPITAL_CONFIG.get(srv, {}).get("name", srv),
+                    "estimated_wait": solver.Value(tasks[srv]["start"]),
+                    "estimated_duration": tasks[srv]["duration"]
                 })
             return result
         return []
-
-
-
 
 def predict_and_schedule(patient_data):
     """
@@ -89,36 +83,37 @@ def tier_a_local_adjust(patient_plan, current_state, threshold_minutes=10, curre
     tasks = patient_plan.get("tasks", [])
     if not tasks: return None
     
-    next_task = tasks[0] # Simplification for MVP
-    planned_station = next_task["station"]
-    deviation = abs(current_time - next_task["time_start"])
-    
-    if deviation > threshold_minutes:
-        return None
+    # Giả lập sự kiện máy X-Quang hỏng -> Ưu tiên chuyển Siêu âm lên trước
+    # Tìm index của xray và ultrasound
+    xray_idx = -1
+    us_idx = -1
+    for i, t in enumerate(tasks):
+        if t["station_code"] == "xray":
+            xray_idx = i
+        elif t["station_code"] == "ultrasound":
+            us_idx = i
+            
+    if xray_idx != -1 and us_idx != -1 and xray_idx < us_idx:
+        # Swap X-Ray và Ultrasound
+        tasks[xray_idx], tasks[us_idx] = tasks[us_idx], tasks[xray_idx]
         
-    # Check if equivalent is free (e.g., if planned is lab_1, check lab_2)
-    # Simple hardcoded mock logic for equivalence
-    base_type = planned_station.split("_")[0] if "_" in planned_station else planned_station
-    
-    for alt_station, status in current_state.items():
-        if alt_station.startswith(base_type) and status == "FREE" and alt_station != planned_station:
-            next_task["station"] = alt_station
-            return {
-                "patient_id": patient_plan.get("patient_id"),
-                "old_station": planned_station,
-                "new_station": alt_station
-            }
+        # Cập nhật lại thời gian chờ cho hợp lý
+        current_wait = 0
+        for t in tasks:
+            t["estimated_wait"] = current_wait
+            current_wait += t["estimated_duration"] + 5 # 5 mins wait buffer
+            
+        return {
+            "patient_id": patient_plan.get("patient_id"),
+            "old_order": [t["station_code"] for t in patient_plan.get("tasks")],
+            "new_order": [t["station_code"] for t in tasks],
+            "tasks": tasks
+        }
+        
     return None
 
 def update_status(patient_id, event):
-
-    """
-    Khi BN hoàn thành 1 trạm -> cập nhật + kiểm tra Tier A
-    """
     return {"next_task": None, "adjusted": False, "adjustment_reason": ""}
 
 def get_dashboard_state():
-    """
-    Dashboard polling -> trạng thái toàn bệnh viện
-    """
     return {"patients": [], "stations": [], "metrics": {}}

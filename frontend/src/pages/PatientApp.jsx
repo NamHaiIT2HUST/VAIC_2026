@@ -1,19 +1,20 @@
 import { useState, useEffect } from 'react';
-import { Activity, FileText, UserPlus, CheckCircle2, Zap, Clock } from 'lucide-react';
+import { Activity, FileText, UserPlus, CheckCircle2, Zap, Clock, MapPin } from 'lucide-react';
 import ChatbotWidget from '../components/ChatbotWidget';
 
 export default function PatientApp() {
   const [patient, setPatient] = useState(null);
   const [patientTimeline, setPatientTimeline] = useState([]);
   const [aiMessage, setAiMessage] = useState('AI CareFlow đã tối ưu lộ trình: Bạn sẽ chụp X-Quang trong lúc chờ kết quả máu để tiết kiệm 45 phút chờ đợi.');
+  const [doctorNote, setDoctorNote] = useState('');
 
   useEffect(() => {
     const fetchPathway = async () => {
       try {
-        const res = await fetch('http://localhost:8080/api/v1/patients/BN-2405/pathway');
+        const res = await fetch('http://localhost:8080/api/v1/patients/BN-0005/pathway');
         const data = await res.json();
-        setPatient(data.patient);
-        setPatientTimeline(data.timeline);
+        setPatient(data.patient || null);
+        setPatientTimeline(Array.isArray(data.timeline) ? data.timeline : []);
       } catch (err) {
         console.error("Failed to fetch pathway", err);
       }
@@ -25,11 +26,27 @@ export default function PatientApp() {
       try {
         const data = JSON.parse(event.data);
         if (data.type === 'ALERT') {
-          setAiMessage('⚠ Máy X-Quang số 2 gặp sự cố. AI đang tự động tính toán lại lộ trình của bạn để tránh ùn tắc...');
+          setAiMessage('⚠ Cảnh báo: ' + data.message + ' AI đang tự động tính toán lại lộ trình của bạn để tránh ùn tắc...');
           setTimeout(() => {
-            setAiMessage('⚡ AI CareFlow đã sắp xếp lại: Mời bạn đi Siêu âm trước để tránh ùn tắc tại phòng X-Quang. Tiết kiệm 30 phút.');
-            fetchPathway(); // Refetch updated timeline from Go DB
+            setAiMessage('⚡ AI CareFlow đã sắp xếp lại lịch trình để tránh ùn tắc. Tiết kiệm 30 phút.');
+            fetchPathway();
           }, 3000);
+        } else if (data.type === 'WORKFLOW_UPDATED') {
+          if (data.note) setDoctorNote(data.note);
+          setAiMessage('⚡ Lộ trình của bạn đã được cập nhật.');
+          fetchPathway();
+        } else if (data.type === 'CALL_PATIENT') {
+          setAiMessage('📢 BÁC SĨ GỌI: ' + data.message);
+          // Play a sound or use SpeechSynthesis
+          const utterance = new SpeechSynthesisUtterance(data.message);
+          utterance.lang = 'vi-VN';
+          window.speechSynthesis.speak(utterance);
+          
+          // Force screen to blink
+          document.body.style.backgroundColor = '#fecaca'; // light red
+          setTimeout(() => { document.body.style.backgroundColor = ''; }, 500);
+          setTimeout(() => { document.body.style.backgroundColor = '#fecaca'; }, 1000);
+          setTimeout(() => { document.body.style.backgroundColor = ''; }, 1500);
         }
       } catch (err) {}
     };
@@ -44,8 +61,8 @@ export default function PatientApp() {
         <div className="max-w-3xl mx-auto w-full">
           <div className="flex justify-between items-start">
             <div>
-              <h2 className="text-2xl font-bold opacity-90">Hoàng Văn E</h2>
-              <p className="text-blue-100 text-sm mt-1">Mã BN: BN-2405 | Nam, 45 tuổi</p>
+              <h2 className="text-2xl font-bold opacity-90">{patient?.name || 'Đang tải...'}</h2>
+              <p className="text-blue-100 text-sm mt-1">Mã BN: {patient?.patient_code || 'BN-...'} | {patient?.gender || 'N/A'}, {patient?.age || '--'} tuổi</p>
             </div>
             <button 
               onClick={() => { localStorage.removeItem('userRole'); window.location.href = '/login'; }}
@@ -55,10 +72,19 @@ export default function PatientApp() {
             </button>
           </div>
           <div className="mt-6 bg-white bg-opacity-20 rounded-2xl p-5 backdrop-blur-sm shadow-inner">
-            <p className="text-sm uppercase tracking-wider font-semibold text-blue-100 mb-2">Trạng thái hiện tại</p>
-            <div className="flex items-center gap-3">
-              <div className="w-4 h-4 bg-green-400 rounded-full animate-pulse shadow-lg shadow-green-400/50"></div>
-              <p className="font-bold text-xl md:text-2xl">{patientTimeline.find(t => t.status === 'current')?.title}</p>
+            <p className="text-sm uppercase tracking-wider font-semibold text-blue-100 mb-2">Hướng dẫn di chuyển</p>
+            <div className="flex items-start gap-3">
+              <div className="mt-1 w-6 h-6 bg-white text-blue-600 rounded-full flex items-center justify-center shadow-lg">
+                <MapPin size={14} className="animate-bounce" />
+              </div>
+              <div>
+                <p className="font-bold text-xl md:text-2xl text-white">
+                  {(patientTimeline || []).find(t => t.status === 'current')?.title || 'Hoàn thành khám'}
+                </p>
+                <p className="text-blue-100 text-sm mt-1">
+                  Vui lòng di chuyển theo đường mũi tên màu xanh trên sàn.
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -66,7 +92,7 @@ export default function PatientApp() {
 
       {/* AI Smart Optimization Banner */}
       <div className="max-w-3xl mx-auto w-full px-6 md:px-8 mt-6">
-        <div className="bg-blue-50 border border-blue-200 p-4 rounded-xl shadow-sm flex gap-4 items-start">
+        <div className="bg-blue-50 border border-blue-200 p-4 rounded-xl shadow-sm flex gap-4 items-start mb-4">
           <div className="bg-blue-100 text-blue-600 p-2 rounded-lg">
             <Zap size={24} className={aiMessage.includes('⚠') ? 'text-amber-500 animate-pulse' : 'text-blue-600'} />
           </div>
@@ -77,6 +103,54 @@ export default function PatientApp() {
             </h4>
             <p className="text-sm text-blue-800 mt-1 font-medium">{aiMessage}</p>
           </div>
+        </div>
+
+        {/* Doctor Note */}
+        {doctorNote && (
+          <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-xl shadow-sm flex gap-4 items-start mb-4 animate-in fade-in zoom-in duration-300">
+            <div className="bg-yellow-100 text-yellow-600 p-2 rounded-lg">
+              <FileText size={24} />
+            </div>
+            <div>
+              <h4 className="font-bold text-yellow-900">Lời dặn của Bác sĩ</h4>
+              <p className="text-sm text-yellow-800 mt-1 italic font-medium">"{doctorNote}"</p>
+            </div>
+          </div>
+        )}
+
+        {/* Floor Map */}
+        <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden mt-4">
+           <div className="bg-slate-50 px-4 py-2 border-b border-slate-200 font-bold text-slate-700 text-sm flex items-center gap-2">
+             <MapPin size={16} /> Sơ đồ Tầng 1
+           </div>
+           <div className="p-4 flex justify-center bg-slate-100 relative">
+              <svg width="100%" height="200" viewBox="0 0 400 200" className="max-w-full drop-shadow-sm">
+                 <rect x="10" y="10" width="380" height="180" rx="8" fill="#ffffff" stroke="#cbd5e1" strokeWidth="2"/>
+                 {/* Sảnh chờ */}
+                 <rect x="30" y="30" width="80" height="140" rx="4" fill="#f1f5f9" stroke="#94a3b8" />
+                 <text x="70" y="100" textAnchor="middle" fontSize="12" fill="#64748b" fontWeight="bold">Sảnh Chờ</text>
+                 
+                 {/* Khám nội */}
+                 <rect x="140" y="30" width="100" height="60" rx="4" fill={patientTimeline.some(t => t.title.includes('Khám') && t.status === 'current') ? '#dbeafe' : '#f8fafc'} stroke={patientTimeline.some(t => t.title.includes('Khám') && t.status === 'current') ? '#3b82f6' : '#cbd5e1'} strokeWidth="2" />
+                 <text x="190" y="65" textAnchor="middle" fontSize="12" fill="#334155" fontWeight="bold">Khám Nội</text>
+                 
+                 {/* X-Quang */}
+                 <rect x="270" y="30" width="100" height="60" rx="4" fill={patientTimeline.some(t => t.title.includes('X-Quang') && t.status === 'current') ? '#dbeafe' : '#f8fafc'} stroke={patientTimeline.some(t => t.title.includes('X-Quang') && t.status === 'current') ? '#3b82f6' : '#cbd5e1'} strokeWidth="2" />
+                 <text x="320" y="65" textAnchor="middle" fontSize="12" fill="#334155" fontWeight="bold">X-Quang</text>
+                 
+                 {/* Siêu âm */}
+                 <rect x="140" y="110" width="100" height="60" rx="4" fill={patientTimeline.some(t => t.title.includes('Siêu âm') && t.status === 'current') ? '#dbeafe' : '#f8fafc'} stroke={patientTimeline.some(t => t.title.includes('Siêu âm') && t.status === 'current') ? '#3b82f6' : '#cbd5e1'} strokeWidth="2" />
+                 <text x="190" y="145" textAnchor="middle" fontSize="12" fill="#334155" fontWeight="bold">Siêu Âm</text>
+                 
+                 {/* Xét nghiệm */}
+                 <rect x="270" y="110" width="100" height="60" rx="4" fill={patientTimeline.some(t => t.title.includes('Sinh hóa') && t.status === 'current') ? '#dbeafe' : '#f8fafc'} stroke={patientTimeline.some(t => t.title.includes('Sinh hóa') && t.status === 'current') ? '#3b82f6' : '#cbd5e1'} strokeWidth="2" />
+                 <text x="320" y="145" textAnchor="middle" fontSize="12" fill="#334155" fontWeight="bold">Xét Nghiệm</text>
+
+                 {/* Current Point Dot (Fake Path logic) */}
+                 <circle cx="120" cy="100" r="6" fill="#3b82f6" className="animate-ping" />
+                 <circle cx="120" cy="100" r="4" fill="#2563eb" />
+              </svg>
+           </div>
         </div>
       </div>
 
@@ -92,7 +166,7 @@ export default function PatientApp() {
         </div>
         
         <div className="relative border-l-[3px] border-slate-200 ml-4 space-y-10">
-          {patientTimeline.map((item, index) => (
+          {(patientTimeline || []).map((item, index) => (
             <div key={index} className="relative pl-8">
               {/* Dot */}
               <div className={`absolute -left-[11px] top-1.5 w-5 h-5 rounded-full border-4 bg-white
