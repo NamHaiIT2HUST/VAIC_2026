@@ -2,10 +2,10 @@ import math
 from ortools.sat.python import cp_model
 
 HOSPITAL_CONFIG = {
-    "ultrasound": {"count": 1, "base_duration": 15, "name": "Siêu âm"},
-    "lab": {"count": 1, "base_duration": 10, "name": "Xét nghiệm Sinh hóa"},
-    "xray": {"count": 1, "base_duration": 10, "name": "X-Quang"},
-    "consultation": {"count": 3, "base_duration": 20, "name": "Khám lâm sàng"},
+    "ultrasound": {"count": 1, "base_duration": 15, "turnaround": 10, "name": "Siêu âm"},
+    "lab": {"count": 1, "base_duration": 10, "turnaround": 45, "name": "Xét nghiệm Sinh hóa"},
+    "xray": {"count": 1, "base_duration": 10, "turnaround": 15, "name": "X-Quang"},
+    "consultation": {"count": 3, "base_duration": 20,"turnaround": 0, "name": "Khám lâm sàng"},
 }
 
 SLACK_FACTORS = {
@@ -17,8 +17,9 @@ SLACK_FACTORS = {
 
 class DurationPredictor:
     def predict(self, station_type: str) -> tuple[float, float]:
-        base = HOSPITAL_CONFIG.get(station_type, {"base_duration": 15})["base_duration"]
-        slack = base * SLACK_FACTORS.get(station_type, 0.1)
+        """Returns (predicted_duration_min, slack_duration_min)"""
+        base = HOSPITAL_CONFIG[station_type]["base_duration"]
+        slack = base * SLACK_FACTORS[station_type]
         return base, slack
 
 class JourneyScheduler:
@@ -28,43 +29,54 @@ class JourneyScheduler:
     def schedule(self, patient_id: str, required_services: list[str]) -> list[dict]:
         model = cp_model.CpModel()
         tasks = {}
+        intervals = []
         
-        # Priority: lab > xray > ultrasound > consultation
-        priority = {"lab": 1, "xray": 2, "ultrasound": 3, "consultation": 4}
-        sorted_services = sorted(required_services, key=lambda s: priority.get(s, 99))
-        
-        for idx, srv in enumerate(sorted_services):
+        for srv in required_services:
             base, slack = self.predictor.predict(srv)
             duration = math.ceil(base + slack)
             
             start_var = model.NewIntVar(0, 1440, f'start_{srv}')
             end_var = model.NewIntVar(0, 1440, f'end_{srv}')
-            model.Add(end_var == start_var + duration)
+            interval_var = model.NewIntervalVar(start_var, duration, end_var, f'interval_{srv}')
             
             tasks[srv] = {"start": start_var, "end": end_var, "duration": duration}
+            intervals.append(interval_var)
             
-            # Precedence constraint
-            if idx > 0:
-                prev_srv = sorted_services[idx - 1]
-                model.Add(start_var >= tasks[prev_srv]["end"])
+        model.AddNoOverlap(intervals)
+        
+        if "consultation" in required_services:
+            consult_start = tasks["consultation"]["start"]
+            for srv in required_services:
+                if srv != "consultation":
+                    turnaround = HOSPITAL_CONFIG[srv].get("turnaround", 0)
+                    model.Add(consult_start >= tasks[srv]["end"] + turnaround)
+                    
+        fasting_services = [s for s in required_services if HOSPITAL_CONFIG[s].get("fasting")]
+        non_fasting_tests = [s for s in required_services if not HOSPITAL_CONFIG[s].get("fasting") and s != "consultation"]
+        
+        for fsrv in fasting_services:
+            for nfsrv in non_fasting_tests:
+                model.Add(tasks[nfsrv]["start"] >= tasks[fsrv]["end"])
                 
         # Objective: minimize makespan
-        if sorted_services:
-            last_srv = sorted_services[-1]
-            model.Minimize(tasks[last_srv]["end"])
+        makespan = model.NewIntVar(0, 2000, 'makespan')
+        for srv in required_services:
+            model.Add(makespan >= tasks[srv]["end"])
+        model.Minimize(makespan)
         
         solver = cp_model.CpSolver()
         status = solver.Solve(model)
         
         if status in (cp_model.OPTIMAL, cp_model.FEASIBLE):
             result = []
-            for srv in sorted_services:
+            for srv in required_services:
                 result.append({
-                    "station_code": srv,
-                    "station_name": HOSPITAL_CONFIG.get(srv, {}).get("name", srv),
-                    "estimated_wait": solver.Value(tasks[srv]["start"]),
-                    "estimated_duration": tasks[srv]["duration"]
+                    "task_id": f"{srv}-001",
+                    "station": srv,
+                    "time_start": solver.Value(tasks[srv]["start"]),
+                    "time_end": solver.Value(tasks[srv]["end"])
                 })
+            result.sort(key=lambda x: x["time_start"])
             return result
         return []
 
@@ -83,37 +95,36 @@ def tier_a_local_adjust(patient_plan, current_state, threshold_minutes=10, curre
     tasks = patient_plan.get("tasks", [])
     if not tasks: return None
     
-    # Giả lập sự kiện máy X-Quang hỏng -> Ưu tiên chuyển Siêu âm lên trước
-    # Tìm index của xray và ultrasound
-    xray_idx = -1
-    us_idx = -1
-    for i, t in enumerate(tasks):
-        if t["station_code"] == "xray":
-            xray_idx = i
-        elif t["station_code"] == "ultrasound":
-            us_idx = i
-            
-    if xray_idx != -1 and us_idx != -1 and xray_idx < us_idx:
-        # Swap X-Ray và Ultrasound
-        tasks[xray_idx], tasks[us_idx] = tasks[us_idx], tasks[xray_idx]
+    next_task = tasks[0]
+    planned_station = next_task["station"]
+    deviation = abs(current_time - next_task["time_start"])
+    
+    if deviation > threshold_minutes:
+        return None
         
-        # Cập nhật lại thời gian chờ cho hợp lý
-        current_wait = 0
-        for t in tasks:
-            t["estimated_wait"] = current_wait
-            current_wait += t["estimated_duration"] + 5 # 5 mins wait buffer
-            
-        return {
-            "patient_id": patient_plan.get("patient_id"),
-            "old_order": [t["station_code"] for t in patient_plan.get("tasks")],
-            "new_order": [t["station_code"] for t in tasks],
-            "tasks": tasks
-        }
-        
+    # Check if equivalent is free (e.g., if planned is lab_1, check lab_2)
+    # Simple hardcoded mock logic for equivalence
+    base_type = planned_station.split("_")[0] if "_" in planned_station else planned_station
+    
+    for alt_station, status in current_state.items():
+        if alt_station.startswith(base_type) and status == "FREE" and alt_station != planned_station:
+            next_task["station"] = alt_station
+            return {
+                "patient_id": patient_plan.get("patient_id"),
+                "old_station": planned_station,
+                "new_station": alt_station
+            }
     return None
 
 def update_status(patient_id, event):
+
+    """
+    Khi BN hoàn thành 1 trạm -> cập nhật + kiểm tra Tier A
+    """
     return {"next_task": None, "adjusted": False, "adjustment_reason": ""}
 
 def get_dashboard_state():
+    """
+    Dashboard polling -> trạng thái toàn bệnh viện
+    """
     return {"patients": [], "stations": [], "metrics": {}}
