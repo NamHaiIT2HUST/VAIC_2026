@@ -227,7 +227,7 @@ func (h *PatientHandler) PrescribeServices(c *fiber.Ctx) error {
 	}
 	
 	// Execute SQL directly to delete pending statuses to avoid struct issues
-	config.DB.Exec("DELETE FROM patient_workflows WHERE appointment_id = ? AND status = 'Pending'", appointment.AppointmentID)
+	config.DB.Exec("DELETE FROM patientworkflow WHERE appointment_id = ? AND status = 'Pending'", appointment.AppointmentID)
 	
 	currentOrder := 5
 	for _, task := range aiResp.Tasks {
@@ -237,7 +237,7 @@ func (h *PatientHandler) PrescribeServices(c *fiber.Ctx) error {
 		if task.StationCode == "lab" { room = "Phòng xét nghiệm Sinh hóa" }
 		
 		// Use Exec for quick raw inserts
-		config.DB.Exec(`INSERT INTO patient_workflows (appointment_id, planned_order, step_type, room_name, estimated_wait, status) VALUES (?, ?, ?, ?, ?, 'Pending')`, 
+		config.DB.Exec(`INSERT INTO patientworkflow (appointment_id, planned_order, step_type, room_name, estimated_wait, status) VALUES (?, ?, ?, ?, ?, 'Pending')`, 
 			appointment.AppointmentID, currentOrder, room, room, task.EstimatedWait)
 		currentOrder++
 	}

@@ -84,7 +84,7 @@ func (h *EventHandler) TriggerEvent(c *fiber.Ctx) error {
 					// We find appointment ID 5 (BN-0005)
 					appointmentID := 5 
 					// Delete all pending
-					config.DB.Exec("DELETE FROM patient_workflows WHERE appointment_id = ? AND status = 'Pending'", appointmentID)
+					config.DB.Exec("DELETE FROM patientworkflow WHERE appointment_id = ? AND status = 'Pending'", appointmentID)
 					
 					currentOrder := 5
 					for _, task := range adjustResp.NewPlan.Tasks {
@@ -93,7 +93,7 @@ func (h *EventHandler) TriggerEvent(c *fiber.Ctx) error {
 						if task.StationCode == "xray" { room = "X-Quang" }
 						if task.StationCode == "lab" { room = "Xét nghiệm Sinh hóa" }
 						
-						config.DB.Exec(`INSERT INTO patient_workflows (appointment_id, planned_order, step_type, room_name, estimated_wait, status) VALUES (?, ?, ?, ?, ?, 'Pending')`, 
+						config.DB.Exec(`INSERT INTO patientworkflow (appointment_id, planned_order, step_type, room_name, estimated_wait, status) VALUES (?, ?, ?, ?, ?, 'Pending')`, 
 							appointmentID, currentOrder, room, room, task.EstimatedWait)
 						currentOrder++
 					}
