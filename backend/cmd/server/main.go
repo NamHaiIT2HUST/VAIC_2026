@@ -24,7 +24,7 @@ func main() {
 
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "*",
-		AllowHeaders: "Origin, Content-Type, Accept",
+		AllowHeaders: "Origin, Content-Type, Accept, Upgrade, Connection",
 	}))
 
 	hub := websocket.NewHub()

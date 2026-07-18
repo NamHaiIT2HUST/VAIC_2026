@@ -20,7 +20,8 @@ export default function DoctorDashboard() {
     };
     fetchPatients();
 
-    const socket = new WebSocket('ws://localhost:8080/ws');
+    const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8080/ws';
+    const socket = new WebSocket(wsUrl);
     socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
