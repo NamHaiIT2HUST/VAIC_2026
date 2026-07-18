@@ -17,7 +17,7 @@ export default function ChatbotWidget() {
     scrollToBottom();
   }, [messages, isOpen]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim()) return;
     
     // Add user message
@@ -25,23 +25,39 @@ export default function ChatbotWidget() {
     setMessages(prev => [...prev, userMsg]);
     setInput('');
 
-    // Mock AI Response (RAG simulation)
-    setTimeout(() => {
-      let botResponse = 'Xin lỗi, tôi chưa hiểu ý bạn.';
-      const lowerInput = userMsg.text.toLowerCase();
-      
-      if (lowerInput.includes('phòng x-quang') || lowerInput.includes('x quang')) {
-        botResponse = 'Phòng X-Quang 02 nằm ở Tầng 2, Khu nhà B. Đi dọc hành lang rẽ phải nhé.';
-      } else if (lowerInput.includes('nhịn ăn') || lowerInput.includes('máu')) {
-        botResponse = 'Vì bạn có chỉ định Xét nghiệm Sinh hóa máu, bạn cần nhịn ăn ít nhất 8 tiếng trước khi lấy máu để kết quả chính xác nhất.';
-      } else if (lowerInput.includes('chờ') || lowerInput.includes('lâu')) {
-        botResponse = 'Hiện tại khoa Chẩn đoán hình ảnh đang khá đông. Hệ thống AI đã tự động đảo Siêu âm lên trước để bạn đỡ phải chờ lâu.';
-      } else {
-        botResponse = 'Mình đã ghi nhận. Cần thêm thông tin chi tiết, bạn vui lòng liên hệ Y tá điều phối ở quầy nhé.';
-      }
+    const botMsgId = Date.now() + 1;
+    setMessages(prev => [...prev, { id: botMsgId, type: 'bot', text: '' }]);
 
-      setMessages(prev => [...prev, { id: Date.now(), type: 'bot', text: botResponse }]);
-    }, 1000);
+    try {
+      const res = await fetch('http://localhost:8000/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: userMsg.text,
+          patient_id: "BN-0005",
+          required_services: [] 
+        })
+      });
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let botResponse = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        botResponse += decoder.decode(value, { stream: true });
+        
+        setMessages(prev => prev.map(msg => 
+          msg.id === botMsgId ? { ...msg, text: botResponse } : msg
+        ));
+      }
+    } catch (err) {
+      console.error(err);
+      setMessages(prev => prev.map(msg => 
+        msg.id === botMsgId ? { ...msg, text: 'Lỗi kết nối tới AI Engine.' } : msg
+      ));
+    }
   };
 
   return (
