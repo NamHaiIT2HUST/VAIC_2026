@@ -134,9 +134,21 @@ func (h *PatientHandler) GetPatientPathway(c *fiber.Ctx) error {
 			timeStr = "Chờ xếp lịch"
 		}
 
+		stepMap := map[string]string{
+			"Clinical Examination": "Khám lâm sàng",
+			"Ultrasound": "Siêu âm",
+			"X-Ray": "X-Quang",
+			"Blood Test": "Xét nghiệm Sinh hóa",
+		}
+		
+		stepName := string(t.StepType)
+		if val, ok := stepMap[stepName]; ok {
+			stepName = val
+		}
+
 		timelineDTOs = append(timelineDTOs, TimelineStepDTO{
 			Step:      t.PlannedOrder,
-			Title:     string(t.StepType) + " - " + room,
+			Title:     stepName + " - " + room,
 			Status:    statusStr,
 			Time:      timeStr,
 			IsOptimal: true,
@@ -231,14 +243,15 @@ func (h *PatientHandler) PrescribeServices(c *fiber.Ctx) error {
 	
 	currentOrder := 5
 	for _, task := range aiResp.Tasks {
+		stepType := "Clinical Examination"
 		room := "Phòng " + task.StationCode
-		if task.StationCode == "ultrasound" { room = "Siêu âm" }
-		if task.StationCode == "xray" { room = "X-Quang" }
-		if task.StationCode == "lab" { room = "Phòng xét nghiệm Sinh hóa" }
+		if task.StationCode == "ultrasound" { stepType = "Ultrasound"; room = "Phòng Siêu âm" }
+		if task.StationCode == "xray" { stepType = "X-Ray"; room = "Phòng X-Quang" }
+		if task.StationCode == "lab" { stepType = "Blood Test"; room = "Phòng xét nghiệm Sinh hóa" }
 		
 		// Use Exec for quick raw inserts
 		config.DB.Exec(`INSERT INTO patientworkflow (appointment_id, planned_order, step_type, room_name, estimated_wait, status) VALUES (?, ?, ?, ?, ?, 'Pending')`, 
-			appointment.AppointmentID, currentOrder, room, room, task.EstimatedWait)
+			appointment.AppointmentID, currentOrder, stepType, room, task.EstimatedWait)
 		currentOrder++
 	}
 	

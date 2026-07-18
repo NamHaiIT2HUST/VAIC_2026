@@ -17,7 +17,7 @@ class AdjustRequest(BaseModel):
 
 @app.post("/api/ai/schedule")
 def schedule(data: PatientData):
-    result = predict_and_schedule(data.dict())
+    result = predict_and_schedule(data.model_dump())
     return result
 
 @app.post("/api/ai/adjust")

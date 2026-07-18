@@ -88,13 +88,14 @@ func (h *EventHandler) TriggerEvent(c *fiber.Ctx) error {
 					
 					currentOrder := 5
 					for _, task := range adjustResp.NewPlan.Tasks {
-						room := "Phòng " + task.StationCode // mock
-						if task.StationCode == "ultrasound" { room = "Siêu âm" }
-						if task.StationCode == "xray" { room = "X-Quang" }
-						if task.StationCode == "lab" { room = "Xét nghiệm Sinh hóa" }
+						stepType := "Clinical Examination"
+						room := "Phòng " + task.StationCode
+						if task.StationCode == "ultrasound" { stepType = "Ultrasound"; room = "Phòng Siêu âm" }
+						if task.StationCode == "xray" { stepType = "X-Ray"; room = "Phòng X-Quang" }
+						if task.StationCode == "lab" { stepType = "Blood Test"; room = "Phòng xét nghiệm Sinh hóa" }
 						
 						config.DB.Exec(`INSERT INTO patientworkflow (appointment_id, planned_order, step_type, room_name, estimated_wait, status) VALUES (?, ?, ?, ?, ?, 'Pending')`, 
-							appointmentID, currentOrder, room, room, task.EstimatedWait)
+							appointmentID, currentOrder, stepType, room, task.EstimatedWait)
 						currentOrder++
 					}
 					// Notify
