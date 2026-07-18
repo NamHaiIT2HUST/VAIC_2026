@@ -256,8 +256,41 @@ func (h *PatientHandler) PrescribeServices(c *fiber.Ctx) error {
 	}
 	
 	if h.hub != nil {
-		h.hub.Broadcast([]byte(`{"type": "WORKFLOW_UPDATED", "patient_code": "` + patientCode + `"}`))
+		h.hub.Broadcast([]byte(fmt.Sprintf(`{"type": "WORKFLOW_UPDATED", "patient_code": "%s"}`, patientCode)))
 	}
+	
+	return c.JSON(fiber.Map{"status": "success", "message": "AI Re-scheduled"})
+}
 
-	return c.JSON(fiber.Map{"status": "success", "tasks": aiResp.Tasks})
+func (h *PatientHandler) CallPatient(c *fiber.Ctx) error {
+	patientCode := c.Params("id")
+	message := fmt.Sprintf("Mời bệnh nhân %s vào phòng khám", patientCode)
+	
+	// Create audio
+	audioURL := ""
+	if h.hub != nil {
+		h.hub.Broadcast([]byte(fmt.Sprintf(`{"type": "CALL_PATIENT", "patient_code": "%s", "message": "%s", "audio_url": "%s"}`, patientCode, message, audioURL)))
+	}
+	return c.JSON(fiber.Map{"status": "success", "message": "Called patient"})
+}
+
+func (h *PatientHandler) CompletePatientStep(c *fiber.Ctx) error {
+	patientCode := c.Params("id")
+	
+	var patientID int
+	fmt.Sscanf(patientCode, "BN-%04d", &patientID)
+	
+	var appointment models.Appointment
+	config.DB.Where("patient_id = ?", patientID).Order("appointment_time desc").First(&appointment)
+	
+	if appointment.AppointmentID != 0 {
+		// Complete the current 'Pending' or 'In Progress' step
+		config.DB.Exec("UPDATE patientworkflow SET status = 'Completed', completed_at = CURRENT_TIMESTAMP WHERE appointment_id = ? AND status IN ('Pending', 'In Progress') AND planned_order = (SELECT MIN(planned_order) FROM patientworkflow WHERE appointment_id = ? AND status IN ('Pending', 'In Progress'))", appointment.AppointmentID, appointment.AppointmentID)
+		
+		if h.hub != nil {
+			h.hub.Broadcast([]byte(fmt.Sprintf(`{"type": "WORKFLOW_UPDATED", "patient_code": "%s"}`, patientCode)))
+		}
+	}
+	
+	return c.JSON(fiber.Map{"status": "success", "message": "Step completed"})
 }

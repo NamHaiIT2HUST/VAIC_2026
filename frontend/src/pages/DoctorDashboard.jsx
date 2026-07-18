@@ -35,6 +35,20 @@ export default function DoctorDashboard() {
     }
   };
 
+  const handleCallPatient = async () => {
+    try {
+      await fetch('http://localhost:8080/api/v1/patients/BN-0005/call', { method: 'POST' });
+      alert('Đã gọi bệnh nhân BN-0005');
+    } catch (err) {}
+  };
+
+  const handleComplete = async () => {
+    try {
+      await fetch('http://localhost:8080/api/v1/patients/BN-0005/complete', { method: 'POST' });
+      alert('Đã kết luận và cập nhật lộ trình!');
+    } catch (err) {}
+  };
+
   return (
     <div className="min-h-screen bg-slate-100 flex font-sans text-slate-800">
       
@@ -120,7 +134,9 @@ export default function DoctorDashboard() {
                   <p className="text-slate-600 text-sm mt-1">Giới tính: Nam | Tuổi: 45 | Nhóm máu: O+</p>
                   <p className="text-slate-800 text-sm mt-2 font-medium"><span className="text-slate-500">Lý do khám:</span> Đau tức ngực, khó thở nhẹ về đêm.</p>
                 </div>
-                <button className="bg-blue-700 text-white text-sm font-bold py-2 px-4 rounded hover:bg-blue-800 transition-colors shadow-sm flex items-center gap-2">
+                <button 
+                  onClick={handleCallPatient}
+                  className="bg-blue-700 text-white text-sm font-bold py-2 px-4 rounded hover:bg-blue-800 transition-colors shadow-sm flex items-center gap-2">
                   <Activity size={16} /> Gọi Bệnh Nhân
                 </button>
              </div>
@@ -128,10 +144,25 @@ export default function DoctorDashboard() {
              {/* Clinical Results Area */}
              <div className="flex-1 p-6 flex flex-col gap-4">
                 <h3 className="font-bold text-slate-800 border-b pb-2">Kết Quả Cận Lâm Sàng</h3>
-                <div className="flex-1 bg-slate-50 rounded border border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400">
-                  <Microscope size={48} className="mb-3 text-slate-300" />
-                  <p className="font-medium text-slate-500">Chưa có dữ liệu xét nghiệm / chẩn đoán hình ảnh.</p>
-                  <p className="text-xs mt-1">Hệ thống sẽ đồng bộ tự động từ phòng LIS/PACS.</p>
+                <div className="flex-1 flex gap-4">
+                  {/* Mock X-Ray */}
+                  <div className="flex-1 border rounded bg-white shadow-sm overflow-hidden flex flex-col">
+                    <div className="bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 border-b">X-Quang Ngực Thẳng</div>
+                    <div className="flex-1 flex items-center justify-center bg-black">
+                       <img src="/xray_mock.png" alt="X-Ray" className="max-h-64 object-contain opacity-90" />
+                    </div>
+                  </div>
+                  {/* Mock Blood Test */}
+                  <div className="flex-1 border rounded bg-white shadow-sm overflow-hidden flex flex-col">
+                    <div className="bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 border-b">Sinh hóa máu</div>
+                    <div className="flex-1 p-4 text-sm">
+                      <div className="flex justify-between py-1 border-b"><span className="text-slate-600">Glucose</span><span className="font-medium text-slate-800">5.2 mmol/L</span></div>
+                      <div className="flex justify-between py-1 border-b"><span className="text-slate-600">Urea</span><span className="font-medium text-slate-800">4.5 mmol/L</span></div>
+                      <div className="flex justify-between py-1 border-b"><span className="text-slate-600">Creatinine</span><span className="font-medium text-slate-800">80 µmol/L</span></div>
+                      <div className="flex justify-between py-1 border-b"><span className="text-slate-600">AST (GOT)</span><span className="font-medium text-slate-800">25 U/L</span></div>
+                      <div className="flex justify-between py-1"><span className="text-slate-600">ALT (GPT)</span><span className="font-medium text-slate-800">30 U/L</span></div>
+                    </div>
+                  </div>
                 </div>
              </div>
 
@@ -152,7 +183,9 @@ export default function DoctorDashboard() {
                   className="flex-1 bg-white text-slate-700 border border-slate-300 text-sm font-bold py-2.5 rounded hover:bg-slate-100 transition-colors flex items-center justify-center gap-2">
                   + Chỉ định Siêu âm
                 </button>
-                <button className="flex-1 bg-teal-600 text-white text-sm font-bold py-2.5 rounded hover:bg-teal-700 transition-colors shadow-sm flex items-center justify-center gap-2">
+                <button 
+                  onClick={handleComplete}
+                  className="flex-1 bg-teal-600 text-white text-sm font-bold py-2.5 rounded hover:bg-teal-700 transition-colors shadow-sm flex items-center justify-center gap-2">
                   <CheckCircle size={18} /> Kết luận & Kê Đơn
                 </button>
              </div>

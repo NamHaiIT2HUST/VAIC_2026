@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Activity, FileText, UserPlus, CheckCircle2, Zap, Clock } from 'lucide-react';
+import { Activity, FileText, UserPlus, CheckCircle2, Zap, Clock, MapPin } from 'lucide-react';
 import ChatbotWidget from '../components/ChatbotWidget';
 
 export default function PatientApp() {
@@ -25,14 +25,26 @@ export default function PatientApp() {
       try {
         const data = JSON.parse(event.data);
         if (data.type === 'ALERT') {
-          setAiMessage('⚠ Máy X-Quang số 2 gặp sự cố. AI đang tự động tính toán lại lộ trình của bạn để tránh ùn tắc...');
+          setAiMessage('⚠ Cảnh báo: ' + data.message + ' AI đang tự động tính toán lại lộ trình của bạn để tránh ùn tắc...');
           setTimeout(() => {
-            setAiMessage('⚡ AI CareFlow đã sắp xếp lại: Mời bạn đi Siêu âm trước để tránh ùn tắc tại phòng X-Quang. Tiết kiệm 30 phút.');
-            fetchPathway(); // Refetch updated timeline from Go DB
+            setAiMessage('⚡ AI CareFlow đã sắp xếp lại lịch trình để tránh ùn tắc. Tiết kiệm 30 phút.');
+            fetchPathway();
           }, 3000);
         } else if (data.type === 'WORKFLOW_UPDATED') {
-          setAiMessage('⚡ Bác sĩ vừa chỉ định dịch vụ mới. AI CareFlow đã tính toán lộ trình tối ưu nhất cho bạn.');
+          setAiMessage('⚡ Lộ trình của bạn đã được cập nhật.');
           fetchPathway();
+        } else if (data.type === 'CALL_PATIENT') {
+          setAiMessage('📢 BÁC SĨ GỌI: ' + data.message);
+          // Play a sound or use SpeechSynthesis
+          const utterance = new SpeechSynthesisUtterance(data.message);
+          utterance.lang = 'vi-VN';
+          window.speechSynthesis.speak(utterance);
+          
+          // Force screen to blink
+          document.body.style.backgroundColor = '#fecaca'; // light red
+          setTimeout(() => { document.body.style.backgroundColor = ''; }, 500);
+          setTimeout(() => { document.body.style.backgroundColor = '#fecaca'; }, 1000);
+          setTimeout(() => { document.body.style.backgroundColor = ''; }, 1500);
         }
       } catch (err) {}
     };
@@ -58,10 +70,19 @@ export default function PatientApp() {
             </button>
           </div>
           <div className="mt-6 bg-white bg-opacity-20 rounded-2xl p-5 backdrop-blur-sm shadow-inner">
-            <p className="text-sm uppercase tracking-wider font-semibold text-blue-100 mb-2">Trạng thái hiện tại</p>
-            <div className="flex items-center gap-3">
-              <div className="w-4 h-4 bg-green-400 rounded-full animate-pulse shadow-lg shadow-green-400/50"></div>
-              <p className="font-bold text-xl md:text-2xl">{(patientTimeline || []).find(t => t.status === 'current')?.title || 'Hoàn thành'}</p>
+            <p className="text-sm uppercase tracking-wider font-semibold text-blue-100 mb-2">Hướng dẫn di chuyển</p>
+            <div className="flex items-start gap-3">
+              <div className="mt-1 w-6 h-6 bg-white text-blue-600 rounded-full flex items-center justify-center shadow-lg">
+                <MapPin size={14} className="animate-bounce" />
+              </div>
+              <div>
+                <p className="font-bold text-xl md:text-2xl text-white">
+                  {(patientTimeline || []).find(t => t.status === 'current')?.title || 'Hoàn thành khám'}
+                </p>
+                <p className="text-blue-100 text-sm mt-1">
+                  Vui lòng di chuyển theo đường mũi tên màu xanh trên sàn.
+                </p>
+              </div>
             </div>
           </div>
         </div>

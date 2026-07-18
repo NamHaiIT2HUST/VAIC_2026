@@ -4,6 +4,8 @@ import { Activity, ShieldPlus, AlertOctagon, LogOut, Search, ChevronRight } from
 export default function Dashboard() {
   const [alert, setAlert] = useState(null);
   const [patients, setPatients] = useState([]);
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [patientPathway, setPatientPathway] = useState(null);
 
   useEffect(() => {
     // Fetch initial data
@@ -144,7 +146,16 @@ export default function Dashboard() {
                     <td className="px-6 py-4 font-medium text-slate-700">{p.location}</td>
                     <td className="px-6 py-4 text-slate-500">{p.time}</td>
                     <td className="px-6 py-4 text-right">
-                      <button className="text-teal-600 hover:text-teal-800 font-semibold text-sm flex items-center gap-1 ml-auto">
+                      <button 
+                        onClick={async () => {
+                          setSelectedPatient(p);
+                          try {
+                            const res = await fetch(`http://localhost:8080/api/v1/patients/${p.patient_code}/pathway`);
+                            const data = await res.json();
+                            setPatientPathway(data.timeline || []);
+                          } catch(err){}
+                        }}
+                        className="text-teal-600 hover:text-teal-800 font-semibold text-sm flex items-center gap-1 ml-auto">
                         Chi tiết <ChevronRight size={16} />
                       </button>
                     </td>
@@ -159,6 +170,38 @@ export default function Dashboard() {
         </div>
 
       </div>
+
+      {/* Detail Modal */}
+      {selectedPatient && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col">
+            <div className="px-6 py-4 border-b bg-slate-50 flex justify-between items-center">
+              <h3 className="font-bold text-lg text-slate-800">Lộ trình của {selectedPatient.name}</h3>
+              <button onClick={() => { setSelectedPatient(null); setPatientPathway(null); }} className="text-slate-400 hover:text-slate-600">✕</button>
+            </div>
+            <div className="p-6 overflow-y-auto max-h-96">
+              <div className="space-y-4">
+                {(patientPathway || []).map((step, idx) => (
+                  <div key={idx} className="flex gap-4 items-center p-3 border rounded bg-slate-50">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs ${step.status === 'completed' ? 'bg-green-500' : step.status === 'current' ? 'bg-blue-500' : 'bg-slate-300'}`}>
+                      {idx + 1}
+                    </div>
+                    <div>
+                      <p className="font-bold text-slate-700">{step.title}</p>
+                      <p className="text-xs text-slate-500">{step.status === 'completed' ? 'Đã hoàn thành' : step.status === 'current' ? 'Đang thực hiện' : 'Đang đợi'}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t bg-slate-50 flex justify-end gap-3">
+              <button className="px-4 py-2 bg-slate-200 text-slate-700 font-bold text-sm rounded hover:bg-slate-300">Ghi đè lộ trình</button>
+              <button onClick={() => setSelectedPatient(null)} className="px-4 py-2 bg-blue-600 text-white font-bold text-sm rounded hover:bg-blue-700">Đóng</button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
