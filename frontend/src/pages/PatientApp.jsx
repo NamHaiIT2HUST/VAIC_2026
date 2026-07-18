@@ -6,7 +6,7 @@ export default function PatientApp() {
   const [patient, setPatient] = useState(null);
   const [patientTimeline, setPatientTimeline] = useState([]);
   const [aiMessage, setAiMessage] = useState('AI CareFlow đã tối ưu lộ trình: Bạn sẽ chụp X-Quang trong lúc chờ kết quả máu để tiết kiệm 45 phút chờ đợi.');
-  const [doctorNote, setDoctorNote] = useState('');
+  const [doctorNote, setDoctorNote] = useState({ text: '', time: '' });
   const [alertToast, setAlertToast] = useState(null);
   const [patientCode, setPatientCode] = useState('BN-0005');
   const [allPatients, setAllPatients] = useState([]);
@@ -26,6 +26,14 @@ export default function PatientApp() {
   }, []);
 
   useEffect(() => {
+    // Load saved doctor note from localStorage
+    const savedNotes = JSON.parse(localStorage.getItem('patientNotes') || '{}');
+    if (savedNotes[patientCode]) {
+      setDoctorNote(savedNotes[patientCode]);
+    } else {
+      setDoctorNote({ text: '', time: '' });
+    }
+
     const fetchPathway = async () => {
       try {
         const res = await fetch((import.meta.env.VITE_API_URL || 'http://localhost:8080') + `/api/v1/patients/${patientCode}/pathway`);
@@ -53,7 +61,16 @@ export default function PatientApp() {
           }, 3000);
         } else if (data.type === 'WORKFLOW_UPDATED') {
           if (data.patient_code && data.patient_code !== patientCode) return; // Bỏ qua nếu của bệnh nhân khác
-          if (data.note) setDoctorNote(data.note);
+          if (data.note) {
+            const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const noteObj = { text: data.note, time: timeStr };
+            setDoctorNote(noteObj);
+            
+            // Save to localStorage to persist across reloads
+            const currentNotes = JSON.parse(localStorage.getItem('patientNotes') || '{}');
+            currentNotes[patientCode] = noteObj;
+            localStorage.setItem('patientNotes', JSON.stringify(currentNotes));
+          }
           setAiMessage('⚡ Lộ trình của bạn đã được cập nhật.');
           fetchPathway();
         } else if (data.type === 'CALL_PATIENT') {
@@ -155,7 +172,7 @@ export default function PatientApp() {
         </div>
 
         {/* Doctor Note Chat Bubble */}
-        {doctorNote && (
+        {doctorNote.text && (
           <div className="flex items-end gap-3 mb-6 mt-2 px-2 animate-in fade-in slide-in-from-left duration-500">
             <div className="w-10 h-10 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center flex-shrink-0 relative">
               <FileText size={20} className="text-blue-600" />
@@ -164,9 +181,9 @@ export default function PatientApp() {
             <div className="bg-white border border-slate-200 p-4 rounded-2xl rounded-bl-none shadow-sm max-w-[85%] relative">
               <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2">
                 Bác sĩ điều trị
-                <span className="text-[10px] text-slate-400 font-normal">{new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                <span className="text-[10px] text-slate-400 font-normal">{doctorNote.time}</span>
               </h4>
-              <p className="text-slate-700 mt-1">{doctorNote}</p>
+              <p className="text-slate-700 mt-1">{doctorNote.text}</p>
             </div>
           </div>
         )}
