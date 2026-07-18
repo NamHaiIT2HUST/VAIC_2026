@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Activity, FileText, UserPlus, CheckCircle2, Zap, Clock, MapPin } from 'lucide-react';
+import { Activity, FileText, UserPlus, CheckCircle2, Zap, Clock, MapPin, Search } from 'lucide-react';
 import ChatbotWidget from '../components/ChatbotWidget';
 
 export default function PatientApp() {
@@ -8,11 +8,27 @@ export default function PatientApp() {
   const [aiMessage, setAiMessage] = useState('AI CareFlow đã tối ưu lộ trình: Bạn sẽ chụp X-Quang trong lúc chờ kết quả máu để tiết kiệm 45 phút chờ đợi.');
   const [doctorNote, setDoctorNote] = useState('');
   const [alertToast, setAlertToast] = useState(null);
+  const [patientCode, setPatientCode] = useState('BN-0005');
+  const [allPatients, setAllPatients] = useState([]);
+
+  useEffect(() => {
+    // Fetch danh sách bệnh nhân cho dropdown
+    const fetchPatients = async () => {
+      try {
+        const res = await fetch((import.meta.env.VITE_API_URL || 'http://localhost:8080') + '/api/v1/patients');
+        const data = await res.json();
+        setAllPatients(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Failed to fetch patients", err);
+      }
+    };
+    fetchPatients();
+  }, []);
 
   useEffect(() => {
     const fetchPathway = async () => {
       try {
-        const res = await fetch((import.meta.env.VITE_API_URL || 'http://localhost:8080') + '/api/v1/patients/BN-0005/pathway');
+        const res = await fetch((import.meta.env.VITE_API_URL || 'http://localhost:8080') + `/api/v1/patients/${patientCode}/pathway`);
         const data = await res.json();
         setPatient(data.patient || null);
         setPatientTimeline(Array.isArray(data.timeline) ? data.timeline : []);
@@ -36,10 +52,12 @@ export default function PatientApp() {
             fetchPathway();
           }, 3000);
         } else if (data.type === 'WORKFLOW_UPDATED') {
+          if (data.patient_code && data.patient_code !== patientCode) return; // Bỏ qua nếu của bệnh nhân khác
           if (data.note) setDoctorNote(data.note);
           setAiMessage('⚡ Lộ trình của bạn đã được cập nhật.');
           fetchPathway();
         } else if (data.type === 'CALL_PATIENT') {
+          if (data.patient_code && data.patient_code !== patientCode) return; // Bỏ qua nếu của bệnh nhân khác
           setAiMessage('📢 BÁC SĨ GỌI: ' + data.message);
           // Play a sound or use SpeechSynthesis
           const utterance = new SpeechSynthesisUtterance(data.message);
@@ -55,7 +73,7 @@ export default function PatientApp() {
       } catch (err) {}
     };
     return () => socket.close();
-  }, []);
+  }, [patientCode]);
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col relative pb-20">
@@ -76,14 +94,28 @@ export default function PatientApp() {
       {/* Header */}
       <div className="bg-blue-600 text-white pt-8 pb-6 px-6 shadow-md z-10 relative md:pt-10">
         <div className="max-w-3xl mx-auto w-full">
-          <div className="flex justify-between items-start">
+          <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
             <div>
               <h2 className="text-2xl font-bold opacity-90">{patient?.name || 'Đang tải...'}</h2>
-              <p className="text-blue-100 text-sm mt-1">Mã BN: {patient?.patient_code || 'BN-...'} | {patient?.gender || 'N/A'}, {patient?.age || '--'} tuổi</p>
+              <div className="flex items-center gap-2 mt-2">
+                <select 
+                  value={patientCode} 
+                  onChange={(e) => setPatientCode(e.target.value)}
+                  className="bg-blue-700 text-white border border-blue-400 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+                >
+                  {allPatients.map(p => (
+                    <option key={p.patient_code} value={p.patient_code}>
+                      {p.patient_code} - {p.name}
+                    </option>
+                  ))}
+                  {allPatients.length === 0 && <option value="BN-0005">BN-0005</option>}
+                </select>
+                <span className="text-blue-100 text-sm">| {patient?.gender || 'N/A'}, {patient?.age || '--'} tuổi</span>
+              </div>
             </div>
             <button 
               onClick={() => { localStorage.removeItem('userRole'); window.location.href = '/login'; }}
-              className="text-sm bg-blue-700 bg-opacity-50 hover:bg-opacity-80 px-4 py-2 rounded-full transition-colors font-medium"
+              className="text-sm bg-blue-700 bg-opacity-50 hover:bg-opacity-80 px-4 py-2 rounded-full transition-colors font-medium self-end md:self-auto whitespace-nowrap"
             >
               Thoát
             </button>
@@ -256,7 +288,7 @@ export default function PatientApp() {
         <button className="flex flex-col items-center p-2 hover:text-slate-600 transition-colors"><UserPlus size={24} /><span className="text-[10px] font-bold mt-1">Tài khoản</span></button>
       </div>
 
-      <ChatbotWidget />
+      <ChatbotWidget patientCode={patientCode} />
     </div>
   );
 }
