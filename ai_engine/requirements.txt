@@ -2,4 +2,10 @@ ortools>=9.12
 pytest
 simpy
 lightgbm
+faiss-cpu
+sentence-transformers
+litellm
+fastapi
+uvicorn
+python-dotenv
 pandas
