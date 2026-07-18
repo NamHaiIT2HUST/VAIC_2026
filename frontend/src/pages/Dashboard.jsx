@@ -94,12 +94,14 @@ export default function Dashboard() {
     clinic: patients.filter(p => p.status.includes('Chờ khám')).length
   };
 
-  const getWaitTime = (code) => {
-    const num = parseInt(code?.replace(/\D/g, '')) || 0;
-    return (num * 3 % 20) + 5; 
+  const getWaitTime = (p) => {
+    if (p.location === 'Đang phân luồng' || p.location === 'Chờ khám lâm sàng') return '-';
+    const num = parseInt(p.patient_code?.replace(/\D/g, '')) || 0;
+    return (num * 3 % 20) + 5 + 'p'; 
   };
-  const isRerouted = (code) => {
-    const num = parseInt(code?.replace(/\D/g, '')) || 0;
+  const isRerouted = (p) => {
+    if (p.location === 'Đang phân luồng' || p.location === 'Chờ khám lâm sàng') return false;
+    const num = parseInt(p.patient_code?.replace(/\D/g, '')) || 0;
     return num % 3 === 0;
   };
 
@@ -255,7 +257,7 @@ export default function Dashboard() {
                         ) : (
                           <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[10px] font-bold border border-slate-200">Khám Thường</span>
                         )}
-                        {isRerouted(p.patient_code) && (
+                        {isRerouted(p) && (
                           <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold border border-blue-200 flex items-center gap-1"><Zap size={10} /> AI Đã Đổi Lịch</span>
                         )}
                       </div>
@@ -269,7 +271,7 @@ export default function Dashboard() {
                       {p.time}
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <span className="font-mono text-teal-700 font-bold bg-teal-50 px-2 py-1 rounded">{getWaitTime(p.patient_code)}p</span>
+                      <span className="font-mono text-teal-700 font-bold bg-teal-50 px-2 py-1 rounded">{getWaitTime(p)}</span>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <button 
@@ -311,17 +313,25 @@ export default function Dashboard() {
             </div>
             <div className="p-6 overflow-y-auto max-h-96">
               <div className="space-y-4">
-                {(patientPathway || []).map((step, idx) => (
-                  <div key={idx} className="flex gap-4 items-center p-3 border rounded bg-slate-50">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs ${step.status === 'completed' ? 'bg-green-500' : step.status === 'current' ? 'bg-blue-500' : 'bg-slate-300'}`}>
-                      {idx + 1}
-                    </div>
-                    <div>
-                      <p className="font-bold text-slate-700">{step.title}</p>
-                      <p className="text-xs text-slate-500">{step.status === 'completed' ? 'Đã hoàn thành' : step.status === 'current' ? 'Đang thực hiện' : 'Đang đợi'}</p>
-                    </div>
+                {!patientPathway || patientPathway.length === 0 ? (
+                  <div className="text-center p-6 bg-slate-50 border border-slate-200 rounded-lg">
+                    <Activity className="mx-auto text-slate-300 mb-2" size={32} />
+                    <p className="text-slate-600 font-medium">Bệnh nhân này chưa có lộ trình.</p>
+                    <p className="text-slate-500 text-sm mt-1">Bác sĩ chưa chỉ định cận lâm sàng cho bệnh nhân này.</p>
                   </div>
-                ))}
+                ) : (
+                  patientPathway.map((step, idx) => (
+                    <div key={idx} className="flex gap-4 items-center p-3 border rounded bg-slate-50">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs ${step.status === 'completed' ? 'bg-green-500' : step.status === 'current' ? 'bg-blue-500' : 'bg-slate-300'}`}>
+                        {idx + 1}
+                      </div>
+                      <div>
+                        <p className="font-bold text-slate-700">{step.title}</p>
+                        <p className="text-xs text-slate-500">{step.status === 'completed' ? 'Đã hoàn thành' : step.status === 'current' ? 'Đang thực hiện' : 'Đang đợi'}</p>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
             <div className="px-6 py-4 border-t bg-slate-50 flex justify-end gap-3">
