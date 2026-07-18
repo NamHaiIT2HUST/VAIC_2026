@@ -34,6 +34,8 @@ export default function Dashboard() {
             fetchPatients(); // Re-fetch updated patient routes from Go DB
             setTimeout(() => setAlert(null), 8000);
           }, 3000);
+        } else if (data.type === 'WORKFLOW_UPDATED' || data.type === 'CALL_PATIENT') {
+          fetchPatients();
         }
       } catch (err) {}
     };

@@ -17,6 +17,18 @@ export default function DoctorDashboard() {
       }
     };
     fetchPatients();
+
+    const socket = new WebSocket('ws://localhost:8080/ws');
+    socket.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'WORKFLOW_UPDATED' || data.type === 'ALERT' || data.type === 'CALL_PATIENT') {
+          fetchPatients();
+        }
+      } catch (err) {}
+    };
+
+    return () => socket.close();
   }, []);
 
   const handlePrescribe = async (serviceCode) => {

@@ -276,12 +276,33 @@ func (h *PatientHandler) PrescribeServices(c *fiber.Ctx) error {
 
 func (h *PatientHandler) PrioritizePatient(c *fiber.Ctx) error {
 	patientCode := c.Params("id")
-	// Giả lập logic AI prioritize ở backend
-	// Thay vì gọi AI engine thực sự cho demo, ta chỉ phát một event để UI phản hồi
+	var patientID int
+	fmt.Sscanf(patientCode, "BN-%04d", &patientID)
+
+	var appointment models.Appointment
+	config.DB.Where("patient_id = ?", patientID).Order("appointment_time desc").First(&appointment)
+
+	tx := config.DB.Begin()
+
+	if err := tx.Model(&models.Patient{}).Where("patient_id = ?", patientID).Update("priority", "VIP").Error; err != nil {
+		tx.Rollback()
+		return c.Status(500).JSON(fiber.Map{"error": "Database error"})
+	}
+
+	if appointment.AppointmentID > 0 {
+		if err := tx.Model(&models.PatientWorkflow{}).Where("appointment_id = ? AND status = ?", appointment.AppointmentID, "Pending").Update("estimated_wait", 0).Error; err != nil {
+			tx.Rollback()
+			return c.Status(500).JSON(fiber.Map{"error": "Database error"})
+		}
+	}
+	
+	tx.Commit()
+
 	if h.hub != nil {
 		h.hub.Broadcast([]byte(fmt.Sprintf(`{"type": "ALERT", "message": "Bệnh nhân %s được đánh dấu CẤP CỨU / VIP."}`, patientCode)))
+		h.hub.Broadcast([]byte(fmt.Sprintf(`{"type": "WORKFLOW_UPDATED", "patient_code": "%s"}`, patientCode)))
 	}
-	return c.JSON(fiber.Map{"status": "success", "message": "Patient prioritized"})
+	return c.JSON(fiber.Map{"status": "success", "message": "Patient prioritized and timeline updated"})
 }
 
 func (h *PatientHandler) CallPatient(c *fiber.Ctx) error {
