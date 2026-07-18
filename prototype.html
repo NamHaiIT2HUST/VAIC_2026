@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireframe — AI Patient Journey Orchestrator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Archivo:wght@600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#16232B; --ink-2:#4A5A64; --paper:#F4F5F1; --card:#FFFFFF;
+  --rule:#D7DCD5; --amber:#DC9B22; --vital:#BE3A2E; --go:#2C7A59;
+  --shadow:0 1px 0 rgba(22,35,43,.06), 0 8px 24px -18px rgba(22,35,43,.5);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Be Vietnam Pro",system-ui,sans-serif;background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased}
+.doc{max-width:1180px;margin:0 auto;padding:32px 20px 80px}
+.doc-head{border-bottom:2px solid var(--ink);padding-bottom:18px;margin-bottom:22px}
+.eyebrow{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
+h1{font-family:"Archivo",sans-serif;font-size:30px;letter-spacing:-.02em;margin:6px 0 8px}
+.sub{color:var(--ink-2);font-size:14px;max-width:64ch;line-height:1.6}
+
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:22px 0 20px}
+.tab{font:600 13px/1.3 "Be Vietnam Pro",sans-serif;padding:10px 13px;border:1px solid var(--rule);background:var(--card);border-radius:2px;cursor:pointer;color:var(--ink-2);text-align:left}
+.tab[aria-selected="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tab:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.tab .mod{display:block;font:700 9px/1 "JetBrains Mono",monospace;letter-spacing:.1em;opacity:.6;margin-bottom:4px}
+
+.stage{display:none} .stage.on{display:block}
+.note{font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--rule);padding-left:12px;margin:0 0 18px;line-height:1.6;max-width:74ch}
+.note b{color:var(--ink)}
+.grid{display:grid;gap:22px;grid-template-columns:minmax(0,1fr) minmax(0,340px);align-items:start}
+.grid.rev{grid-template-columns:minmax(0,340px) minmax(0,1fr)}
+@media(max-width:860px){.grid,.grid.rev{grid-template-columns:1fr}}
+
+.panel{background:var(--card);border:1px solid var(--rule);border-radius:2px;box-shadow:var(--shadow)}
+.panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--rule)}
+.panel-head h2{font-family:"Archivo",sans-serif;font-size:15px}
+.panel-body{padding:16px}
+.state{font-family:"JetBrains Mono",monospace;font-size:11px;display:flex;align-items:center;gap:6px}
+.dot{width:9px;height:9px;border-radius:50%;flex:none}
+.d-red{background:var(--vital)} .d-amb{background:var(--amber)} .d-go{background:var(--go)}
+
+.devnote{padding:16px}
+.devnote h3{font-family:"Archivo",sans-serif;font-size:14px;margin-bottom:9px}
+.devnote ul{font-size:12.5px;line-height:1.7;padding-left:17px;color:var(--ink-2)}
+.devnote code{font-family:"JetBrains Mono",monospace;font-size:11px;background:var(--paper);padding:1px 4px;border-radius:2px;color:var(--ink)}
+
+.btn{background:var(--ink);color:#fff;border:0;border-radius:2px;padding:12px 16px;font:600 13.5px "Be Vietnam Pro",sans-serif;cursor:pointer;width:100%}
+.btn:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--rule)}
+.btn.small{padding:9px 13px;width:auto;font-size:12.5px}
+
+/* ---- form tiếp đón ---- */
+.seg{display:flex;border:1px solid var(--rule);border-radius:2px;overflow:hidden;margin-bottom:16px}
+.seg button{flex:1;border:0;background:#fff;padding:11px 8px;font:600 12.5px "Be Vietnam Pro",sans-serif;cursor:pointer;color:var(--ink-2);border-right:1px solid var(--rule)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.fld{margin-bottom:14px}
+.fld label{display:block;font:700 10px/1 "JetBrains Mono",monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);margin-bottom:7px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--rule);background:#fff;border-radius:2px;padding:7px 10px;font:500 12.5px "Be Vietnam Pro",sans-serif;cursor:pointer;color:var(--ink-2)}
+.chip[aria-pressed="true"]{background:#FBF6EA;border-color:var(--amber);color:var(--ink);font-weight:600}
+.chip:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+input[type=text]{width:100%;border:1px solid var(--rule);border-radius:2px;padding:10px;font:400 13.5px "Be Vietnam Pro",sans-serif}
+
+/* ---- kết quả phân luồng ---- */
+.route{border-top:2px solid var(--ink);padding:16px;display:none}
+.route.on{display:block}
+.route h3{font:700 10px/1 "JetBrains Mono",monospace;letter-spacing:.12em;color:var(--ink-2);margin-bottom:12px}
+.chain{list-style:none;counter-reset:c}
+.chain li{counter-increment:c;display:flex;gap:11px;align-items:flex-start;padding:9px 0;border-bottom:1px dashed var(--rule)}
+.chain li:last-child{border-bottom:0}
+.chain li:before{content:counter(c);font:700 11px/20px "JetBrains Mono",monospace;width:20px;height:20px;text-align:center;background:var(--ink);color:#fff;border-radius:50%;flex:none}
+.chain .cn{font-weight:600;font-size:13.5px}
+.chain .cp{font-size:12.5px;color:var(--ink-2)}
+.badge{display:inline-block;font:700 9px/1 "JetBrains Mono",monospace;letter-spacing:.08em;padding:4px 6px;border-radius:2px;vertical-align:2px;margin-left:6px}
+.b-red{background:var(--vital);color:#fff} .b-amb{background:var(--amber);color:#fff} .b-go{background:var(--go);color:#fff}
+.b-ln{background:var(--paper);color:var(--ink-2);border:1px solid var(--rule)}
+.why{font-size:11.5px;color:var(--amber);margin-top:3px;line-height:1.5}
+
+/* ---- điện thoại ---- */
+.phone{width:340px;max-width:100%;border:1px solid var(--rule);border-radius:14px;background:var(--card);box-shadow:var(--shadow);overflow:hidden}
+.phone-bar{background:var(--ink);color:#fff;padding:9px 14px;display:flex;justify-content:space-between;font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.06em}
+.phone-body{padding:16px}
+.doc-title{font-family:"Archivo",sans-serif;font-size:17px;margin-bottom:2px}
+.doc-meta{font-size:12.5px;color:var(--ink-2);margin-bottom:14px}
+.slot{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid var(--rule);background:#fff;border-radius:2px;padding:12px;margin-bottom:8px;cursor:pointer;font-family:inherit;font-size:14px}
+.slot:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.slot[aria-pressed="true"]{border-color:var(--ink);border-width:2px;padding:11px}
+.slot .hh{font-family:"JetBrains Mono",monospace;font-weight:700;font-size:15px;width:52px}
+.slot .load{flex:1;font-size:12.5px;color:var(--ink-2)}
+.tipbox{background:#FBF6EA;border:1px solid #EBD9AE;border-radius:2px;padding:11px 12px;font-size:12.5px;line-height:1.55;margin:12px 0 14px}
+
+/* ---- thanh hành trình ---- */
+.jhead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px}
+.elapsed{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--ink-2);text-align:right}
+.rail{list-style:none;position:relative;padding-left:26px}
+.rail:before{content:"";position:absolute;left:6px;top:8px;bottom:12px;width:1px;background:var(--rule)}
+.step{position:relative;padding:0 0 18px}
+.step:before{content:"";position:absolute;left:-24px;top:5px;width:13px;height:13px;border-radius:50%;background:#fff;border:1.5px solid var(--rule);z-index:1}
+.step.done:before{background:var(--go);border-color:var(--go)}
+.step.now:before{background:var(--amber);border-color:var(--amber);box-shadow:0 0 0 4px rgba(220,155,34,.22)}
+.step .t{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink-2)}
+.step .n{font-weight:600;font-size:16px;margin:1px 0}
+.step .p{font-size:13px;color:var(--ink-2)}
+.step .tagnow{display:inline-block;font:700 9.5px/1 "JetBrains Mono",monospace;letter-spacing:.1em;background:var(--amber);color:#fff;padding:4px 6px;border-radius:2px;margin-bottom:4px}
+.step.moved .n:after{content:"ĐÃ ĐỔI";font:700 9px/1 "JetBrains Mono",monospace;background:var(--vital);color:#fff;padding:3px 5px;border-radius:2px;margin-left:7px;vertical-align:2px;letter-spacing:.08em}
+.toast{border:1px solid var(--vital);border-left-width:3px;background:#FDF2F1;border-radius:2px;padding:11px 12px;font-size:12.5px;line-height:1.55;margin-bottom:14px}
+.toast b{display:block;margin-bottom:2px}
+
+/* ---- SMS ---- */
+.sms{background:#EDF0EC;border:1px solid var(--rule);border-radius:2px;padding:14px;min-height:100%}
+.sms .from{font:700 10px/1 "JetBrains Mono",monospace;letter-spacing:.1em;color:var(--ink-2);margin-bottom:12px}
+.bub{background:#fff;border:1px solid var(--rule);border-radius:2px 10px 10px 10px;padding:10px 12px;font-size:13px;line-height:1.6;margin-bottom:9px}
+.bub .tm{display:block;font:400 10px/1 "JetBrains Mono",monospace;color:var(--ink-2);margin-top:7px}
+.bub.alert{border-color:var(--vital);background:#FDF2F1}
+
+/* ---- phiếu giấy ---- */
+.slip{background:#fff;border:1.5px solid var(--ink);padding:16px;font-size:12.5px}
+.slip .sh{text-align:center;border-bottom:1px solid var(--ink);padding-bottom:9px;margin-bottom:11px}
+.slip .sh .h1{font-weight:700;font-size:13px;letter-spacing:.04em}
+.slip .sh .h2{font-size:11px;color:var(--ink-2);margin-top:2px}
+.slip .row{display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:3px}
+.slip table{width:100%;border-collapse:collapse;margin:11px 0}
+.slip th,.slip td{border:1px solid var(--ink-2);padding:6px 7px;font-size:11.5px;text-align:left}
+.slip th{background:var(--paper);font:700 9.5px/1.3 "JetBrains Mono",monospace;letter-spacing:.06em}
+.slip td.o{font-family:"JetBrains Mono",monospace;font-weight:700;text-align:center;width:26px}
+.slip .foot{font-size:11px;color:var(--ink-2);line-height:1.6;border-top:1px dashed var(--ink-2);padding-top:8px}
+
+/* ---- bảng ---- */
+table.dt{width:100%;border-collapse:collapse}
+.dt th,.dt td{padding:11px 16px;text-align:left;font-size:13px;border-bottom:1px solid var(--rule)}
+.dt th{font:600 10.5px/1 "JetBrains Mono",monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.dt td.num{font-family:"JetBrains Mono",monospace;font-weight:700}
+.dt tr.hot td{background:#FDF2F1}
+.aibox{padding:14px 16px;border-top:2px solid var(--ink);display:none;gap:12px;align-items:center}
+.aibox.on{display:flex;flex-wrap:wrap}
+.aibox p{flex:1;min-width:250px;font-size:13px;line-height:1.55}
+.aibox .k{font-weight:700}
+
+/* ---- giám sát ---- */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--rule)}
+.kpi{background:#fff;padding:15px 16px}
+.kpi .kl{font:700 9.5px/1.3 "JetBrains Mono",monospace;letter-spacing:.1em;color:var(--ink-2);text-transform:uppercase}
+.kpi .kv{font-family:"Archivo",sans-serif;font-size:26px;margin:6px 0 2px}
+.kpi .kd{font-size:11.5px}
+.up{color:var(--go)} .down{color:var(--go)} .bad{color:var(--vital)}
+.util{padding:16px}
+.ur{margin-bottom:13px}
+.ur .ul{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px}
+.ur .ul b{font-family:"JetBrains Mono",monospace}
+.bar{height:9px;background:var(--paper);border:1px solid var(--rule);border-radius:2px;overflow:hidden;position:relative}
+.bar i{display:block;height:100%;background:var(--go)}
+.bar i.mid{background:var(--amber)} .bar i.low{background:var(--vital)}
+.bar .ghost-mark{position:absolute;top:-3px;bottom:-3px;width:1.5px;background:var(--ink-2)}
+
+/* ---- LED ---- */
+.led{background:#0B1116;border-radius:4px;padding:30px 24px;text-align:center;color:#fff;box-shadow:var(--shadow)}
+.led .room{font:700 12px/1 "JetBrains Mono",monospace;letter-spacing:.22em;color:#7C8C96;margin-bottom:20px}
+.led .lbl{font:700 11px/1 "JetBrains Mono",monospace;letter-spacing:.2em;color:#7C8C96}
+.led .big{font-family:"JetBrains Mono",monospace;font-weight:700;font-size:clamp(40px,7vw,72px);letter-spacing:.1em;color:var(--amber);margin:10px 0 20px;text-shadow:0 0 26px rgba(220,155,34,.4)}
+.led .queue{font:400 13px/1 "JetBrains Mono",monospace;color:#C6D0D6;letter-spacing:.1em}
+.led .eta{font:400 11.5px/1 "JetBrains Mono",monospace;color:#7C8C96;margin-top:12px}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <header class="doc-head">
+    <div class="eyebrow">Docs / Wireframes · Member 5 (BA2 — UX/UI & QA)</div>
+    <h1>AI Patient Journey Orchestrator — Wireframe</h1>
+    <p class="sub">Bản dựng bấm được, thay cho Figma. Nhấn đúp vào file để mở, không cần cài đặt gì. Năm tab dưới đây tương ứng đúng năm module đề bài yêu cầu, cộng một tab cho tiêu chí chấm về công suất.</p>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true"  data-go="s1"><span class="mod">MODULE 2</span>Tiếp đón — Phân luồng</button>
+    <button class="tab" role="tab" aria-selected="false" data-go="s2"><span class="mod">MODULE 1</span>Đặt lịch</button>
+    <button class="tab" role="tab" aria-selected="false" data-go="s3"><span class="mod">MODULE 3 + 4</span>Hành trình — 3 kênh</button>
+    <button class="tab" role="tab" aria-selected="false" data-go="s4"><span class="mod">MODULE 5</span>Điều phối — Sự cố</button>
+    <button class="tab" role="tab" aria-selected="false" data-go="s5"><span class="mod">TIÊU CHÍ CHẤM</span>Giám sát công suất</button>
+  </div>
+
+  <!-- ============ 1. TIẾP ĐÓN — PHÂN LUỒNG ============ -->
+  <section class="stage on" id="s1">
+    <p class="note"><b>Patient Routing.</b> Màn hình của nhân viên tiếp đón. Đề bài yêu cầu dùng <b>triệu chứng, mức ưu tiên, đối tượng bệnh nhân và dịch vụ cần làm</b> để chỉ đúng khu ngay từ đầu — đây là chỗ làm việc đó. Bấm <b>“Bệnh nhân mới (lấy số trực tiếp)”</b> để xem nhánh không đặt lịch, không app: hệ thống vẫn phân luồng được, chỉ đổi kênh liên lạc sang SMS và phiếu giấy.</p>
+    <div class="grid">
+      <div class="panel">
+        <div class="panel-head"><h2>Tiếp đón — Khu Tự nguyện 1</h2><span class="state"><span class="dot d-go"></span>ĐANG NHẬN</span></div>
+        <div class="panel-body">
+          <div class="seg" id="segType">
+            <button aria-pressed="true"  data-t="booked">Bệnh nhân đã đặt lịch</button>
+            <button aria-pressed="false" data-t="walkin">Bệnh nhân mới (lấy số trực tiếp)</button>
+          </div>
+
+          <div class="fld">
+            <label>Họ tên</label>
+            <input type="text" id="pname" value="Trần Văn C">
+          </div>
+
+          <div class="fld">
+            <label>Đối tượng</label>
+            <div class="chips" id="chObj">
+              <button class="chip" aria-pressed="true"  data-v="bhyt">BHYT đúng tuyến</button>
+              <button class="chip" aria-pressed="false" data-v="trai">BHYT trái tuyến</button>
+              <button class="chip" aria-pressed="false" data-v="dv">Dịch vụ (không BHYT)</button>
+            </div>
+          </div>
+
+          <div class="fld">
+            <label>Mức ưu tiên</label>
+            <div class="chips" id="chPri">
+              <button class="chip" aria-pressed="true"  data-v="thuong">Thường</button>
+              <button class="chip" aria-pressed="false" data-v="uutien">Ưu tiên (≥75 tuổi, thương binh…)</button>
+              <button class="chip" aria-pressed="false" data-v="capcuu">Nghi cấp cứu</button>
+            </div>
+          </div>
+
+          <div class="fld">
+            <label>Triệu chứng bệnh nhân khai</label>
+            <div class="chips" id="chSym">
+              <button class="chip" aria-pressed="true"  data-v="dautucnguc">Đau tức ngực</button>
+              <button class="chip" aria-pressed="false" data-v="khotho">Khó thở khi gắng sức</button>
+              <button class="chip" aria-pressed="false" data-v="hoihop">Hồi hộp, trống ngực</button>
+              <button class="chip" aria-pressed="false" data-v="huyetap">Huyết áp cao</button>
+              <button class="chip" aria-pressed="false" data-v="taikham">Tái khám định kỳ</button>
+            </div>
+          </div>
+
+          <button class="btn" id="routeBtn">Phân luồng bệnh nhân</button>
+        </div>
+
+        <div class="route" id="routeOut">
+          <h3>HỆ THỐNG ĐỀ XUẤT LUỒNG ĐI</h3>
+          <ul class="chain" id="chain"></ul>
+          <div style="margin-top:14px;padding-top:12px;border-top:1px dashed var(--rule)">
+            <div style="font:700 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;color:var(--ink-2);margin-bottom:7px">KÊNH THEO DÕI HÀNH TRÌNH</div>
+            <div id="channel" style="font-size:13px;line-height:1.6"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel devnote">
+        <h3>Ghi chú cho Tech Lead</h3>
+        <ul>
+          <li>API <code>POST /routing</code> nhận: <code>patient_type</code>, <code>insurance_type</code>, <code>priority</code>, <code>symptoms[]</code>. Trả về: <code>steps[]</code>, <code>predicted_services[]</code>, <code>channel</code>.</li>
+          <li><b>Không</b> dùng <code>patient_id</code> làm feature dự đoán — bệnh nhân mới không có lịch sử. Dùng trung bình theo chuyên khoa + triệu chứng (cold start).</li>
+          <li>“Nghi cấp cứu” phải cắt ngang toàn bộ luồng, chuyển thẳng HD.25.01 — ràng buộc cứng #3.</li>
+          <li>“Ưu tiên” lấy theo QĐ 154 của BVT, ràng buộc cứng #2. Không cho AI hạ mức ưu tiên.</li>
+          <li>Gói dịch vụ dự đoán chỉ là <b>gợi ý để giữ chỗ hàng chờ</b>, quyền chỉ định vẫn 100% ở bác sĩ.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 2. ĐẶT LỊCH ============ -->
+  <section class="stage" id="s2">
+    <p class="note"><b>Appointment Coordination.</b> Chỉ áp dụng cho bệnh nhân đặt trước. AI không đổi bác sĩ — bệnh nhân vẫn chọn đúng bác sĩ cũ, tính liên tục điều trị là ràng buộc cứng. AI chỉ tô mức tải từng khung giờ. Khung đỏ vẫn bấm được: <b>gợi ý chứ không chặn</b>.</p>
+    <div class="grid rev">
+      <div class="phone">
+        <div class="phone-bar"><span>ĐẶT LỊCH KHÁM</span><span>09:41</span></div>
+        <div class="phone-body">
+          <div class="doc-title">BS. Nguyễn Văn A</div>
+          <div class="doc-meta">Tim mạch · Thứ 3, 12/08 · Khu Tự nguyện 1</div>
+          <div id="slots"></div>
+          <div class="tipbox" id="tip">Chọn <b>10:30</b> để tiết kiệm khoảng <b>40 phút</b> chờ so với khung 07:30.</div>
+          <button class="btn">Xác nhận đặt lịch</button>
+        </div>
+      </div>
+      <div class="panel devnote">
+        <h3>Ghi chú cho Tech Lead</h3>
+        <ul>
+          <li>Mỗi khung giờ API trả: <code>slot_time</code>, <code>load_level</code> (go/amber/red), <code>eta_wait_minutes</code>.</li>
+          <li>Màu chỉ để <b>hiển thị</b> — không khoá nút của khung đỏ (test case A4).</li>
+          <li>Câu gợi ý sinh theo dữ liệu, không hard-code: “Chọn {giờ} để tiết kiệm khoảng {phút} phút”.</li>
+          <li>Ca tái khám: bác sĩ khoá sẵn, không đề xuất bác sĩ khác (ràng buộc cứng #1).</li>
+          <li>Đây là module <b>duy nhất</b> bệnh nhân walk-in không dùng tới — họ đã đến viện rồi. Bốn module còn lại vẫn chạy đủ cho họ.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 3. HÀNH TRÌNH — 3 KÊNH ============ -->
+  <section class="stage" id="s3">
+    <p class="note"><b>Service Sequencing + Wait-time Estimation.</b> Cùng một Journey Plan, đẩy ra ba kênh — đề bài ghi rõ “app, screen, or SMS”. Thứ tự do AI sắp: việc trả kết quả lâu nhất (lấy máu ~45') làm trước, việc ngắn chèn vào lúc chờ. <b>Phiếu giấy in đè lên mẫu BM.25.01.01 sẵn có của bệnh viện</b> — cụ 80 tuổi không có điện thoại vẫn đi đúng thứ tự.</p>
+    <div style="display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));align-items:start">
+
+      <div>
+        <div style="font:700 10px/1 'JetBrains Mono',monospace;letter-spacing:.12em;color:var(--ink-2);margin-bottom:9px">KÊNH 1 — APP (BN có smartphone)</div>
+        <div class="phone">
+          <div class="phone-bar"><span>HÀNH TRÌNH CỦA TÔI</span><span>09:41</span></div>
+          <div class="phone-body">
+            <div id="toastSlot"></div>
+            <div class="jhead">
+              <div>
+                <div class="doc-title">Nguyễn Thị B</div>
+                <div class="doc-meta">Mã khám 305-012 · BHYT</div>
+              </div>
+              <div class="elapsed">Đã ở viện<br><b>47'</b></div>
+            </div>
+            <ul class="rail" id="rail"></ul>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font:700 10px/1 'JetBrains Mono',monospace;letter-spacing:.12em;color:var(--ink-2);margin-bottom:9px">KÊNH 2 — SMS (BN không có app)</div>
+        <div class="sms" id="smsBox"></div>
+      </div>
+
+      <div>
+        <div style="font:700 10px/1 'JetBrains Mono',monospace;letter-spacing:.12em;color:var(--ink-2);margin-bottom:9px">KÊNH 3 — PHIẾU GIẤY (in tại bàn phân phòng)</div>
+        <div class="slip" id="slipBox"></div>
+      </div>
+
+    </div>
+
+    <div class="panel devnote" style="margin-top:20px">
+      <h3>Ghi chú cho Tech Lead</h3>
+      <ul>
+        <li>Journey Plan sinh ra <b>khi bác sĩ ra chỉ định</b> — không phụ thuộc bệnh nhân có app hay không. Một API <code>GET /journey/{visit_id}</code>, ba cách render.</li>
+        <li>Mỗi bước: <code>time</code>, <code>name</code>, <code>place</code>, <code>state</code> (done/now/next/wait), <code>reason</code>.</li>
+        <li><code>reason</code> là phần “giải thích được” của AI — <b>bắt buộc có</b>, đây là chỗ ăn điểm sáng tạo khi chấm.</li>
+        <li>Cỡ chữ tên bước ≥ 16px — bệnh nhân tim mạch phần lớn cao tuổi (test case F3).</li>
+        <li>SMS: gửi tối đa 3 tin/lượt khám (nhận số, đổi lịch, mời vào khám) — tránh spam và tốn phí.</li>
+        <li>Phiếu giấy: in khổ A5 từ bàn phân phòng, đè lên mẫu BM.25.01.01 đã có. Điều dưỡng không phải học phần mềm mới.</li>
+        <li>Cập nhật app qua WebSocket, không bắt người dùng kéo để tải lại.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ 4. ĐIỀU PHỐI — SỰ CỐ ============ -->
+  <section class="stage" id="s4">
+    <p class="note"><b>Real-time Adjustment.</b> Bấm <b>“Báo máy siêu âm 2 hỏng”</b> → AI đề xuất → bấm <b>“Áp dụng”</b> → sang tab 3 xem lộ trình đã tự đổi trên cả ba kênh. Đây là đoạn demo chính. Lưu ý: AI <b>đề xuất</b>, điều dưỡng <b>quyết</b> — không tự động đổi lịch bệnh nhân sau lưng nhân viên.</p>
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Điều phối — Khu Tự nguyện 1</h2>
+        <span class="state"><span class="dot d-go" id="stDot"></span><span id="stTxt">BÌNH THƯỜNG</span></span>
+      </div>
+      <table class="dt">
+        <thead><tr><th>Khu vực</th><th>Đang chờ</th><th>Chờ TB</th><th>Thiết bị</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div class="aibox" id="aibox">
+        <p><span class="k">AI đề xuất:</span> chuyển <b>5 bệnh nhân</b> đang chờ siêu âm tim sang máy SA1 khung 10:15, kéo <b>điện tim</b> lên làm trước để họ không ngồi không. Ước tính giảm <b>26 phút</b> chờ trung bình cho nhóm bị ảnh hưởng. <b>Không ca ưu tiên nào bị lùi lịch.</b></p>
+        <button class="btn small" id="apply">Áp dụng</button>
+        <button class="btn small ghost" id="skip">Bỏ qua</button>
+      </div>
+    </div>
+    <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn small ghost" id="breakBtn">⚠ Báo máy siêu âm 2 hỏng</button>
+      <button class="btn small ghost" id="resetBtn">↺ Đặt lại demo</button>
+    </div>
+    <div class="grid" style="margin-top:20px">
+      <div class="panel devnote">
+        <h3>Ghi chú cho Tech Lead</h3>
+        <ul>
+          <li>Sự kiện <code>EQUIPMENT_DOWN</code> → AI quét mọi Journey Plan có dịch vụ liên quan → sinh phương án → chờ điều dưỡng duyệt.</li>
+          <li>Yêu cầu tốc độ: đề xuất hiện trong <b>&lt; 10 giây</b> (test case E1).</li>
+          <li>Đề xuất phải kèm <b>số phút tiết kiệm</b> và <b>câu xác nhận không ca ưu tiên nào bị lùi</b> — không có hai thứ này thì điều dưỡng sẽ không dám bấm Áp dụng.</li>
+          <li>Bấm “Bỏ qua” → giữ nguyên, không đẩy thông báo (test case E3).</li>
+        </ul>
+      </div>
+      <div>
+        <div style="font:700 10px/1 'JetBrains Mono',monospace;letter-spacing:.12em;color:var(--ink-2);margin-bottom:9px">MÀN HÌNH SẢNH CHỜ — cùng dữ liệu, số phải khớp App</div>
+        <div class="led">
+          <div class="room">PHÒNG KHÁM 305 — BS. NGUYỄN VĂN A</div>
+          <div class="lbl">ĐANG KHÁM</div>
+          <div class="big">305 · 012</div>
+          <div class="queue">TIẾP THEO&nbsp;&nbsp;013&nbsp;&nbsp;014&nbsp;&nbsp;015</div>
+          <div class="eta">SỐ 020 → DỰ KIẾN 09:35</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 5. GIÁM SÁT ============ -->
+  <section class="stage" id="s5">
+    <p class="note">Tiêu chí chấm có bốn mục: <b>giảm thời gian chờ, giảm ùn tắc, tăng công suất phòng khám và thiết bị, bệnh nhân chủ động theo dõi</b>. Bốn con số dưới đây là bốn mục đó, đặt cạnh nhau để giám khảo nhìn phát thấy ngay. Số so sánh với baseline chạy trên cùng bộ dữ liệu giả lập, không bật AI.</p>
+    <div class="panel">
+      <div class="panel-head"><h2>Giám sát — hôm nay so với baseline</h2><span class="state"><span class="dot d-go"></span>DỮ LIỆU GIẢ LẬP</span></div>
+      <div class="kpis">
+        <div class="kpi"><div class="kl">Chờ trung bình / BN</div><div class="kv">68'</div><div class="kd down">↓ 41' so với baseline 109'</div></div>
+        <div class="kpi"><div class="kl">Ùn tắc cao nhất trong ngày</div><div class="kv">31</div><div class="kd down">↓ từ 58 BN chờ cùng lúc</div></div>
+        <div class="kpi"><div class="kl">Công suất thiết bị TB</div><div class="kv">74%</div><div class="kd up">↑ từ 52%</div></div>
+        <div class="kpi"><div class="kl">BN tự theo dõi hành trình</div><div class="kv">86%</div><div class="kd">app 61% · SMS 25%</div></div>
+      </div>
+      <div class="util">
+        <div style="font:700 10px/1 'JetBrains Mono',monospace;letter-spacing:.12em;color:var(--ink-2);margin-bottom:13px">CÔNG SUẤT THEO KHU VỰC — vạch dọc là baseline</div>
+        <div class="ur"><div class="ul"><span>Máy siêu âm tim SA1</span><b>88%</b></div><div class="bar"><i style="width:88%"></i><span class="ghost-mark" style="left:61%"></span></div></div>
+        <div class="ur"><div class="ul"><span>Máy siêu âm tim SA2</span><b>0% — đang sửa</b></div><div class="bar"><i class="low" style="width:2%"></i><span class="ghost-mark" style="left:59%"></span></div></div>
+        <div class="ur"><div class="ul"><span>X-quang</span><b>71%</b></div><div class="bar"><i style="width:71%"></i><span class="ghost-mark" style="left:44%"></span></div></div>
+        <div class="ur"><div class="ul"><span>Xét nghiệm máu</span><b>79%</b></div><div class="bar"><i style="width:79%"></i><span class="ghost-mark" style="left:63%"></span></div></div>
+        <div class="ur"><div class="ul"><span>Điện tim</span><b>58%</b></div><div class="bar"><i class="mid" style="width:58%"></i><span class="ghost-mark" style="left:31%"></span></div></div>
+        <div class="ur"><div class="ul"><span>Phòng khám 305 — BS. A</span><b>82%</b></div><div class="bar"><i style="width:82%"></i><span class="ghost-mark" style="left:66%"></span></div></div>
+      </div>
+    </div>
+    <div class="panel devnote" style="margin-top:20px">
+      <h3>Ghi chú cho Member 4 (pitching) và Member 6 (data)</h3>
+      <ul>
+        <li>Toàn bộ số ở đây là <b>chỗ để điền</b>, không phải số thật. Member 3 chạy mô phỏng có AI / không AI trên cùng <code>mock_patients.csv</code> rồi thay số vào.</li>
+        <li>Nếu số mô phỏng ra không đẹp thì <b>để nguyên số thật</b> — giám khảo hỏi cách tính là lộ ngay. Số khiêm tốn mà giải thích được vẫn hơn số đẹp mà bịa.</li>
+        <li>Chỉ số “BN tự theo dõi” tách app / SMS để chứng minh giải pháp không bỏ rơi bệnh nhân không smartphone.</li>
+      </ul>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* ---------- tab ---------- */
+const tabs = document.querySelectorAll('.tab');
+tabs.forEach(t => t.addEventListener('click', () => {
+  tabs.forEach(x => x.setAttribute('aria-selected', String(x === t)));
+  document.querySelectorAll('.stage').forEach(s => s.classList.toggle('on', s.id === t.dataset.go));
+  window.scrollTo({top:0, behavior:'instant'});
+}));
+
+/* ---------- chip helper ---------- */
+function single(id){
+  const box = document.getElementById(id);
+  box.addEventListener('click', e => {
+    const b = e.target.closest('.chip, [data-t]'); if(!b) return;
+    box.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed','false'));
+    b.setAttribute('aria-pressed','true');
+  });
+}
+function multi(id){
+  const box = document.getElementById(id);
+  box.addEventListener('click', e => {
+    const b = e.target.closest('.chip'); if(!b) return;
+    b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') === 'true' ? 'false' : 'true');
+  });
+}
+['segType','chObj','chPri'].forEach(single);
+multi('chSym');
+function picked(id){
+  const el = document.querySelector('#'+id+' [aria-pressed="true"]');
+  return el ? (el.dataset.v || el.dataset.t) : null;
+}
+function pickedAll(id){
+  return [...document.querySelectorAll('#'+id+' [aria-pressed="true"]')].map(e => e.textContent.toLowerCase());
+}
+
+/* ---------- 1. phân luồng ---------- */
+document.getElementById('routeBtn').onclick = () => {
+  const type = picked('segType'), obj = picked('chObj'), pri = picked('chPri');
+  const syms = pickedAll('chSym');
+  const name = document.getElementById('pname').value.trim() || 'Bệnh nhân';
+  const steps = [];
+
+  if(pri === 'capcuu'){
+    steps.push({n:'Chuyển thẳng Khoa Cấp cứu', p:'Tầng 1 — theo HD.25.01', bg:['b-red','CẮT NGANG'],
+      why:'Nghi cấp cứu — bỏ qua toàn bộ hàng chờ. Ràng buộc cứng, AI không được can thiệp.'});
+    document.getElementById('chain').innerHTML = steps.map(s => row(s)).join('');
+    document.getElementById('channel').innerHTML = 'Không áp dụng — bệnh nhân được nhân viên đưa trực tiếp.';
+    document.getElementById('routeOut').classList.add('on');
+    return;
+  }
+
+  const uu = pri === 'uutien';
+  const q = obj === 'dv' ? 'Quầy 5 — thu phí dịch vụ' : (uu ? 'Quầy 1 — dành cho BN ưu tiên' : 'Quầy 3 — BHYT');
+
+  if(type === 'walkin'){
+    steps.push({n:'Lấy số tại cây tự động', p:'Sảnh Tự nguyện 1', bg:['b-ln','ĐÃ XONG'],
+      why:'Bệnh nhân không đặt trước — vào luồng từ đây, không cần app.'});
+  }
+  steps.push({n:'Tiếp đón, khai hồ sơ', p:q + (uu ? ' — đóng dấu ƯU TIÊN' : ''),
+    bg: uu ? ['b-amb','ƯU TIÊN'] : null,
+    why: uu ? 'Diện ưu tiên theo QĐ 154 — luôn xếp trước, AI không được hạ mức.' : null});
+  if(obj === 'trai') steps.push({n:'Ký cam kết chi trả chênh lệch', p:'Ngay tại quầy tiếp đón',
+    why:'Trái tuyến — thủ tục bắt buộc, đặt ngay sau tiếp đón để khỏi quay lại.'});
+  steps.push({n:'Đo dấu hiệu sinh tồn', p:'Bàn DHST — Tầng 1',
+    why: syms.some(s => s.includes('huyết áp')) ? 'Khai huyết áp cao — đo lại trước khi vào khám.' : null});
+
+  const room = syms.some(s => s.includes('tái khám')) ? 'Phòng 305 — BS. Nguyễn Văn A' : 'Phòng 302 — Nội tim mạch';
+  steps.push({n:'Khám lâm sàng', p:room, bg: uu ? ['b-go','~08:25'] : ['b-go','~08:42'],
+    why: syms.some(s => s.includes('tái khám')) ? 'Tái khám — giữ đúng bác sĩ cũ. Ràng buộc cứng #1.' : 'Phân theo triệu chứng khai tại quầy.'});
+
+  const pre = [];
+  if(syms.some(s => s.includes('ngực') || s.includes('khó thở'))) pre.push('điện tim', 'siêu âm tim', 'X-quang ngực');
+  if(syms.some(s => s.includes('hồi hộp'))) pre.push('điện tim');
+  if(syms.some(s => s.includes('huyết áp'))) pre.push('xét nghiệm máu');
+  if(!pre.length) pre.push('điện tim');
+  const uniq = [...new Set(pre)];
+  steps.push({n:'Dự kiến cận lâm sàng: ' + uniq.join(', '), p:'Hệ thống giữ sẵn chỗ trong hàng chờ', bg:['b-ln','DỰ ĐOÁN'],
+    why:'Chỉ là gợi ý để giữ chỗ. Bác sĩ chỉ định thế nào thì Journey Plan sinh lại theo đúng chỉ định đó.'});
+
+  document.getElementById('chain').innerHTML = steps.map(s => row(s)).join('');
+  document.getElementById('channel').innerHTML = type === 'walkin'
+    ? `<b>SMS + phiếu giấy.</b> ${name} không có app. Số điện thoại lấy từ bìa hồ sơ khám (quầy tiếp đón vẫn ghi như quy trình cũ). Phiếu hành trình in tại bàn phân phòng. <span style="color:var(--amber)">Bốn trong năm module vẫn chạy đủ — chỉ mất phần đặt lịch trước.</span>`
+    : `<b>App + màn hình sảnh.</b> ${name} đã có lịch hẹn, đẩy thẳng Journey Plan vào app. Vẫn gửi SMS dự phòng khi lịch thay đổi.`;
+  document.getElementById('routeOut').classList.add('on');
+};
+function row(s){
+  return `<li><div>
+    <div class="cn">${s.n}${s.bg ? `<span class="badge ${s.bg[0]}">${s.bg[1]}</span>` : ''}</div>
+    <div class="cp">${s.p}</div>
+    ${s.why ? `<div class="why">↳ ${s.why}</div>` : ''}
+  </div></li>`;
+}
+
+/* ---------- 2. khung giờ ---------- */
+const slots = [
+  {h:'07:30', lv:'red', txt:'Rất đông · chờ ~45 phút'},
+  {h:'08:30', lv:'red', txt:'Đông · chờ ~35 phút'},
+  {h:'09:30', lv:'amb', txt:'Vừa · chờ ~15 phút'},
+  {h:'10:30', lv:'go',  txt:'Vắng · chờ ~5 phút', rec:true},
+  {h:'14:00', lv:'go',  txt:'Vắng · chờ ~5 phút'}
+];
+const cls = {red:'d-red', amb:'d-amb', go:'d-go'};
+document.getElementById('slots').innerHTML = slots.map((s,i) => `
+  <button class="slot" aria-pressed="${!!s.rec}" data-i="${i}">
+    <span class="dot ${cls[s.lv]}"></span><span class="hh">${s.h}</span><span class="load">${s.txt}</span>
+  </button>`).join('');
+document.querySelectorAll('.slot').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.slot').forEach(x => x.setAttribute('aria-pressed','false'));
+  b.setAttribute('aria-pressed','true');
+  const s = slots[b.dataset.i];
+  document.getElementById('tip').innerHTML = s.lv === 'go'
+    ? `Chọn <b>${s.h}</b> để tiết kiệm khoảng <b>40 phút</b> chờ so với khung 07:30.`
+    : `Khung <b>${s.h}</b> đang đông. Bạn vẫn đặt được — khung <b>10:30</b> hôm nay còn trống nhiều.`;
+}));
+
+/* ---------- 3. hành trình, 3 kênh ---------- */
+const planA = [
+  {t:'08:12', n:'Tiếp đón',                p:'Quầy 3 — Tầng 1',    s:'done'},
+  {t:'08:20', n:'Đo dấu hiệu sinh tồn',    p:'Bàn DHST — Tầng 1',  s:'done'},
+  {t:'08:35', n:'Khám — BS. Nguyễn Văn A', p:'Phòng 305 — Tầng 3', s:'done'},
+  {t:'08:50', n:'Lấy máu xét nghiệm',      p:'Quầy 3 — Tầng 1',    s:'now',  why:'Làm trước vì kết quả về lâu nhất (~45 phút)'},
+  {t:'09:00', n:'Chụp X-quang',            p:'Phòng 108 — Tầng 1', s:'next', why:'Chèn vào lúc máu đang chạy'},
+  {t:'09:20', n:'Siêu âm tim',             p:'Phòng 210 — Tầng 2', s:'wait'},
+  {t:'09:45', n:'Bác sĩ kết luận',         p:'Phòng 305 — Tầng 3', s:'wait', why:'Vào khi đã đủ 3 kết quả'},
+  {t:'10:00', n:'Thanh toán & lĩnh thuốc', p:'Tầng 1',             s:'wait'}
+];
+const planB = [
+  {t:'08:12', n:'Tiếp đón',                p:'Quầy 3 — Tầng 1',    s:'done'},
+  {t:'08:20', n:'Đo dấu hiệu sinh tồn',    p:'Bàn DHST — Tầng 1',  s:'done'},
+  {t:'08:35', n:'Khám — BS. Nguyễn Văn A', p:'Phòng 305 — Tầng 3', s:'done'},
+  {t:'08:50', n:'Lấy máu xét nghiệm',      p:'Quầy 3 — Tầng 1',    s:'now',  why:'Làm trước vì kết quả về lâu nhất (~45 phút)'},
+  {t:'09:00', n:'Chụp X-quang',            p:'Phòng 108 — Tầng 1', s:'next', why:'Chèn vào lúc máu đang chạy'},
+  {t:'09:30', n:'Điện tim',                p:'Phòng 112 — Tầng 1', s:'wait', mv:true, why:'Kéo lên trước để không phải ngồi không'},
+  {t:'10:15', n:'Siêu âm tim',             p:'Phòng 210 — máy SA1', s:'wait', mv:true, why:'Máy SA2 đang hỏng — đã chuyển sang SA1'},
+  {t:'10:40', n:'Bác sĩ kết luận',         p:'Phòng 305 — Tầng 3', s:'wait', mv:true},
+  {t:'10:55', n:'Thanh toán & lĩnh thuốc', p:'Tầng 1',             s:'wait'}
+];
+
+function drawAll(plan, changed){
+  /* app */
+  document.getElementById('rail').innerHTML = plan.map(x => `
+    <li class="step ${x.s} ${x.mv?'moved':''}">
+      ${x.s==='now' ? '<div class="tagnow">ĐANG LÀM</div>' : ''}
+      <div class="t">${x.t}</div><div class="n">${x.n}</div><div class="p">${x.p}</div>
+      ${x.why ? `<div class="why">↳ ${x.why}</div>` : ''}
+    </li>`).join('');
+  document.getElementById('toastSlot').innerHTML = changed ? `
+    <div class="toast"><b>Lịch của bạn vừa thay đổi</b>
+      Máy siêu âm 2 gặp sự cố. Bạn đi <b>điện tim (P.112)</b> trước, siêu âm tim chuyển sang
+      <b>10:15 tại phòng 210</b>. Bạn không cần làm gì thêm.</div>` : '';
+
+  /* sms */
+  const base = `
+    <div class="from">TIN NHẮN TỪ 8079 — BV TIM HÀ NỘI</div>
+    <div class="bub">BV Tim HN: So kham cua ban la <b>305-012</b>, phong 305, BS Nguyen Van A. Du kien vao kham 08:35.<span class="tm">08:12</span></div>
+    <div class="bub">BV Tim HN: Bac si chi dinh 3 dich vu. Thu tu di: <b>1. Lay mau (Quay 3, T1) → 2. X-quang (P.108, T1) → 3. Sieu am tim (P.210, T2)</b>. Xong quay lai P.305 luc 09:45.<span class="tm">08:47</span></div>`;
+  const alert = `
+    <div class="bub alert">BV Tim HN: <b>Lich cua ban da doi.</b> May sieu am 2 hong. Ban di <b>dien tim P.112</b> truoc, sieu am tim chuyen sang <b>10:15 P.210</b>. Ban khong can lam gi them.<span class="tm">09:41</span></div>`;
+  document.getElementById('smsBox').innerHTML = base + (changed ? alert : '');
+
+  /* phiếu giấy */
+  const svc = plan.filter(x => ['Lấy máu xét nghiệm','Chụp X-quang','Siêu âm tim','Điện tim'].includes(x.n));
+  document.getElementById('slipBox').innerHTML = `
+    <div class="sh">
+      <div class="h1">BỆNH VIỆN TIM HÀ NỘI</div>
+      <div class="h2">PHIẾU HƯỚNG DẪN — KHÁM BỆNH TỰ NGUYỆN 1</div>
+      <div class="h2" style="font-family:'JetBrains Mono',monospace;font-size:10px">Mẫu BM.25.01.01 · in tự động</div>
+    </div>
+    <div class="row"><span>Họ tên: <b>Nguyễn Thị B</b></span><span>Số khám: <b>305-012</b></span></div>
+    <div class="row"><span>Ngày: 12/08</span><span>BS: Nguyễn Văn A — P.305</span></div>
+    <table>
+      <thead><tr><th style="width:26px">TT</th><th>Việc cần làm</th><th style="width:76px">Nơi làm</th><th style="width:46px">Giờ</th></tr></thead>
+      <tbody>${svc.map((x,i) => `<tr><td class="o">${i+1}</td><td>${x.n}${x.mv?' <b>(đã đổi)</b>':''}</td><td>${x.p.split(' — ')[0]}</td><td>${x.t}</td></tr>`).join('')}</tbody>
+    </table>
+    <div class="foot">
+      <b>Làm đúng thứ tự 1 → ${svc.length}.</b> Không cần chờ lấy kết quả, kết quả tự chuyển về phòng khám.
+      Xong hết, quay lại <b>phòng 305</b> lúc <b>${plan.find(x => x.n.includes('kết luận')).t}</b>.
+      Có thay đổi, nhân viên hướng dẫn sẽ báo trực tiếp.
+    </div>`;
+}
+drawAll(planA, false);
+
+/* ---------- 4. điều phối ---------- */
+const rowsA = [
+  ['Xét nghiệm máu', 8,  "12'", '🟢 2/2 hoạt động'],
+  ['Siêu âm tim',    14, "38'", '🟢 2/2 hoạt động'],
+  ['X-quang',        3,  "6'",  '🟢 1/1 hoạt động'],
+  ['Điện tim',       2,  "4'",  '🟢 1/1 hoạt động'],
+  ['Phòng khám 305', 6,  "22'", '🟢 bác sĩ đang khám']
+];
+const rowsB = [
+  ['Xét nghiệm máu', 8,  "12'", '🟢 2/2 hoạt động'],
+  ['Siêu âm tim',    19, "71'", '🔴 1/2 — SA2 hỏng', true],
+  ['X-quang',        3,  "6'",  '🟢 1/1 hoạt động'],
+  ['Điện tim',       2,  "4'",  '🟢 1/1 hoạt động'],
+  ['Phòng khám 305', 6,  "22'", '🟢 bác sĩ đang khám']
+];
+const rowsC = [
+  ['Xét nghiệm máu', 8,  "12'", '🟢 2/2 hoạt động'],
+  ['Siêu âm tim',    14, "45'", '🟠 1/2 — đã giãn lịch'],
+  ['X-quang',        6,  "11'", '🟢 1/1 hoạt động'],
+  ['Điện tim',       5,  "9'",  '🟢 1/1 hoạt động'],
+  ['Phòng khám 305', 6,  "24'", '🟢 bác sĩ đang khám']
+];
+function drawTable(rows){
+  document.getElementById('tbody').innerHTML = rows.map(r =>
+    `<tr class="${r[4]?'hot':''}"><td>${r[0]}</td><td class="num">${r[1]}</td><td class="num">${r[2]}</td><td>${r[3]}</td></tr>`).join('');
+}
+function setState(c,t){ document.getElementById('stDot').className = 'dot '+c; document.getElementById('stTxt').textContent = t; }
+drawTable(rowsA);
+
+document.getElementById('breakBtn').onclick = () => {
+  drawTable(rowsB); setState('d-red','SỰ CỐ THIẾT BỊ');
+  document.getElementById('aibox').classList.add('on');
+};
+document.getElementById('apply').onclick = () => {
+  drawTable(rowsC); setState('d-amb','ĐÃ ĐIỀU PHỐI LẠI');
+  document.getElementById('aibox').classList.remove('on');
+  drawAll(planB, true);
+  alert('Đã áp dụng. Sang tab "Hành trình — 3 kênh" để xem lịch đã đổi trên cả app, SMS và phiếu giấy.');
+};
+document.getElementById('skip').onclick = () => document.getElementById('aibox').classList.remove('on');
+document.getElementById('resetBtn').onclick = () => {
+  drawTable(rowsA); setState('d-go','BÌNH THƯỜNG');
+  document.getElementById('aibox').classList.remove('on');
+  drawAll(planA, false);
+};
+</script>
+</body>
+</html>
