@@ -1,18 +1,26 @@
 package handlers
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"time"
 
 	"careflow-backend/internal/config"
 	"careflow-backend/internal/models"
+	"careflow-backend/internal/websocket"
 	"github.com/gofiber/fiber/v2"
 )
 
-type PatientHandler struct{}
+type PatientHandler struct{
+	hub *websocket.Hub
+}
 
-func NewPatientHandler() *PatientHandler {
-	return &PatientHandler{}
+func NewPatientHandler(hub *websocket.Hub) *PatientHandler {
+	return &PatientHandler{
+		hub: hub,
+	}
 }
 
 // PatientDTO matches the JSON structure expected by the React Frontend
@@ -44,10 +52,8 @@ func calculateAge(birthdate time.Time) int {
 }
 
 func mapToPatientDTO(p models.Patient) PatientDTO {
-	// Calculate age
 	age := calculateAge(p.DateOfBirth)
 
-	// Translate Gender
 	genderStr := "Khác"
 	if p.Gender == "Male" {
 		genderStr = "Nam"
@@ -60,7 +66,7 @@ func mapToPatientDTO(p models.Patient) PatientDTO {
 		Name:        p.FullName,
 		Age:         age,
 		Gender:      genderStr,
-		Status:      p.Priority, // Map priority to status for now, or could query current workflow
+		Status:      string(p.Priority),
 		Location:    "Đang phân luồng",
 		Time:        p.ArrivalTime.Format("15:04"),
 	}
@@ -87,7 +93,6 @@ func (h *PatientHandler) GetPatients(c *fiber.Ctx) error {
 func (h *PatientHandler) GetPatientPathway(c *fiber.Ctx) error {
 	patientCode := c.Params("id")
 	
-	// patientCode is like "BN-0001"
 	var patientID int
 	fmt.Sscanf(patientCode, "BN-%04d", &patientID)
 
@@ -98,7 +103,6 @@ func (h *PatientHandler) GetPatientPathway(c *fiber.Ctx) error {
 		})
 	}
 
-	// Get appointment
 	var appointment models.Appointment
 	config.DB.Where("patient_id = ?", patientID).Order("appointment_time desc").First(&appointment)
 
@@ -132,7 +136,7 @@ func (h *PatientHandler) GetPatientPathway(c *fiber.Ctx) error {
 
 		timelineDTOs = append(timelineDTOs, TimelineStepDTO{
 			Step:      t.PlannedOrder,
-			Title:     t.StepType + " - " + room,
+			Title:     string(t.StepType) + " - " + room,
 			Status:    statusStr,
 			Time:      timeStr,
 			IsOptimal: true,
@@ -149,7 +153,6 @@ func (h *PatientHandler) GetStats(c *fiber.Ctx) error {
 	var totalPatients int64
 	config.DB.Model(&models.Patient{}).Count(&totalPatients)
 
-	// Mocking time-series and distribution data for charts
 	hourlyData := []map[string]interface{}{
 		{"time": "07:00", "patients": 45, "optimal": 40},
 		{"time": "08:00", "patients": 82, "optimal": 70},
@@ -168,9 +171,80 @@ func (h *PatientHandler) GetStats(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{
 		"total_patients": totalPatients,
-		"wait_time_avg":  24, // 24 minutes
-		"utilization":    92, // 92% capacity
+		"wait_time_avg":  24,
+		"utilization":    92,
 		"hourly_traffic": hourlyData,
 		"dept_distribution": departmentData,
 	})
+}
+
+type PrescribeRequest struct {
+	Services []string `json:"services"`
+}
+
+type AIResponse struct {
+	PatientID string `json:"patient_id"`
+	Tasks     []struct {
+		StationCode       string `json:"station_code"`
+		StationName       string `json:"station_name"`
+		EstimatedWait     int    `json:"estimated_wait"`
+		EstimatedDuration int    `json:"estimated_duration"`
+	} `json:"tasks"`
+}
+
+func (h *PatientHandler) PrescribeServices(c *fiber.Ctx) error {
+	patientCode := c.Params("id")
+	var req PrescribeRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
+	}
+
+	payload := map[string]interface{}{
+		"patient_id": patientCode,
+		"required_services": req.Services,
+	}
+	payloadBytes, _ := json.Marshal(payload)
+	
+	resp, err := http.Post("http://localhost:8000/api/ai/schedule", "application/json", bytes.NewBuffer(payloadBytes))
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "AI Engine unavailable"})
+	}
+	defer resp.Body.Close()
+	
+	var aiResp AIResponse
+	if err := json.NewDecoder(resp.Body).Decode(&aiResp); err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Invalid AI response"})
+	}
+	
+	var patientID int
+	fmt.Sscanf(patientCode, "BN-%04d", &patientID)
+	
+	var appointment models.Appointment
+	config.DB.Where("patient_id = ?", patientID).Order("appointment_time desc").First(&appointment)
+	
+	if appointment.AppointmentID == 0 {
+		return c.Status(404).JSON(fiber.Map{"error": "No appointment found"})
+	}
+	
+	// Execute SQL directly to delete pending statuses to avoid struct issues
+	config.DB.Exec("DELETE FROM patient_workflows WHERE appointment_id = ? AND status = 'Pending'", appointment.AppointmentID)
+	
+	currentOrder := 5
+	for _, task := range aiResp.Tasks {
+		room := "Phòng " + task.StationCode
+		if task.StationCode == "ultrasound" { room = "Siêu âm" }
+		if task.StationCode == "xray" { room = "X-Quang" }
+		if task.StationCode == "lab" { room = "Phòng xét nghiệm Sinh hóa" }
+		
+		// Use Exec for quick raw inserts
+		config.DB.Exec(`INSERT INTO patient_workflows (appointment_id, planned_order, step_type, room_name, estimated_wait, status) VALUES (?, ?, ?, ?, ?, 'Pending')`, 
+			appointment.AppointmentID, currentOrder, room, room, task.EstimatedWait)
+		currentOrder++
+	}
+	
+	if h.hub != nil {
+		h.hub.Broadcast([]byte(`{"type": "WORKFLOW_UPDATED", "patient_code": "` + patientCode + `"}`))
+	}
+
+	return c.JSON(fiber.Map{"status": "success", "tasks": aiResp.Tasks})
 }

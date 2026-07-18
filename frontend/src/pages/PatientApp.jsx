@@ -30,6 +30,9 @@ export default function PatientApp() {
             setAiMessage('⚡ AI CareFlow đã sắp xếp lại: Mời bạn đi Siêu âm trước để tránh ùn tắc tại phòng X-Quang. Tiết kiệm 30 phút.');
             fetchPathway(); // Refetch updated timeline from Go DB
           }, 3000);
+        } else if (data.type === 'WORKFLOW_UPDATED') {
+          setAiMessage('⚡ Bác sĩ vừa chỉ định dịch vụ mới. AI CareFlow đã tính toán lộ trình tối ưu nhất cho bạn.');
+          fetchPathway();
         }
       } catch (err) {}
     };

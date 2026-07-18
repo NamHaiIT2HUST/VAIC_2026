@@ -17,6 +17,24 @@ export default function DoctorDashboard() {
     fetchPatients();
   }, []);
 
+  const handlePrescribe = async (serviceCode) => {
+    try {
+      const res = await fetch('http://localhost:8080/api/v1/patients/BN-0005/prescribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ services: [serviceCode] })
+      });
+      if (res.ok) {
+        alert('Đã chỉ định ' + serviceCode + ' thành công! AI đang lên lịch trình mới.');
+      } else {
+        alert('Có lỗi xảy ra.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Không thể kết nối đến máy chủ.');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-100 flex font-sans text-slate-800">
       
@@ -119,11 +137,20 @@ export default function DoctorDashboard() {
 
              {/* Action Buttons */}
              <div className="p-6 border-t border-slate-200 bg-slate-50 flex gap-3">
-                <button className="flex-1 bg-white text-slate-700 border border-slate-300 text-sm font-bold py-2.5 rounded hover:bg-slate-100 transition-colors flex items-center justify-center gap-2">
+                <button 
+                  onClick={() => handlePrescribe('lab')}
+                  className="flex-1 bg-white text-slate-700 border border-slate-300 text-sm font-bold py-2.5 rounded hover:bg-slate-100 transition-colors flex items-center justify-center gap-2">
                   + Chỉ định Sinh Hóa
                 </button>
-                <button className="flex-1 bg-white text-slate-700 border border-slate-300 text-sm font-bold py-2.5 rounded hover:bg-slate-100 transition-colors flex items-center justify-center gap-2">
+                <button 
+                  onClick={() => handlePrescribe('xray')}
+                  className="flex-1 bg-white text-slate-700 border border-slate-300 text-sm font-bold py-2.5 rounded hover:bg-slate-100 transition-colors flex items-center justify-center gap-2">
                   + Chỉ định X-Quang
+                </button>
+                <button 
+                  onClick={() => handlePrescribe('ultrasound')}
+                  className="flex-1 bg-white text-slate-700 border border-slate-300 text-sm font-bold py-2.5 rounded hover:bg-slate-100 transition-colors flex items-center justify-center gap-2">
+                  + Chỉ định Siêu âm
                 </button>
                 <button className="flex-1 bg-teal-600 text-white text-sm font-bold py-2.5 rounded hover:bg-teal-700 transition-colors shadow-sm flex items-center justify-center gap-2">
                   <CheckCircle size={18} /> Kết luận & Kê Đơn

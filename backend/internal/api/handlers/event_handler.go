@@ -3,10 +3,10 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
-	"io"
 	"log"
 	"net/http"
 
+	"careflow-backend/internal/config"
 	"careflow-backend/internal/services"
 	"careflow-backend/internal/websocket"
 
@@ -44,20 +44,62 @@ func (h *EventHandler) TriggerEvent(c *fiber.Ctx) error {
 		// --- AI OPTIMIZATION CALL ---
 		if event.Type == "ALERT" {
 			go func() {
-				// We call the Python FastAPI server here
 				log.Println("Received ALERT event. Will re-route via AI...")
+				// Fake fetching current tasks
+				payloadStr := `{
+					"patient_plan": {
+						"patient_id": "BN-0005",
+						"tasks": [
+							{"station_code": "lab", "estimated_wait": 0, "estimated_duration": 15},
+							{"station_code": "xray", "estimated_wait": 15, "estimated_duration": 15},
+							{"station_code": "ultrasound", "estimated_wait": 30, "estimated_duration": 15}
+						]
+					},
+					"current_state": {}
+				}`
 				
-				payloadStr := `{"patient_id":"BN-0005", "required_services":["lab", "xray", "ultrasound", "consultation"]}`
-				resp, err := http.Post("http://localhost:8000/api/ai/schedule", "application/json", bytes.NewBuffer([]byte(payloadStr)))
+				resp, err := http.Post("http://localhost:8000/api/ai/adjust", "application/json", bytes.NewBuffer([]byte(payloadStr)))
 				if err != nil {
 					log.Println("Failed to call AI Engine:", err)
 					return
 				}
 				defer resp.Body.Close()
-				body, _ := io.ReadAll(resp.Body)
-				log.Println("AI Engine responded with new optimal route:", string(body))
 				
-				// In a full implementation, we would parse this JSON and update the PatientWorkflow table in PostgreSQL here.
+				var adjustResp struct {
+					Adjusted bool `json:"adjusted"`
+					NewPlan  struct {
+						Tasks []struct {
+							StationCode       string `json:"station_code"`
+							StationName       string `json:"station_name"`
+							EstimatedWait     int    `json:"estimated_wait"`
+							EstimatedDuration int    `json:"estimated_duration"`
+						} `json:"tasks"`
+					} `json:"new_plan"`
+				}
+				
+				if err := json.NewDecoder(resp.Body).Decode(&adjustResp); err == nil && adjustResp.Adjusted {
+					log.Println("AI Engine swapped order. Updating DB...")
+					
+					// Update Database Workflow
+					// We find appointment ID 5 (BN-0005)
+					appointmentID := 5 
+					// Delete all pending
+					config.DB.Exec("DELETE FROM patient_workflows WHERE appointment_id = ? AND status = 'Pending'", appointmentID)
+					
+					currentOrder := 5
+					for _, task := range adjustResp.NewPlan.Tasks {
+						room := "Phòng " + task.StationCode // mock
+						if task.StationCode == "ultrasound" { room = "Siêu âm" }
+						if task.StationCode == "xray" { room = "X-Quang" }
+						if task.StationCode == "lab" { room = "Xét nghiệm Sinh hóa" }
+						
+						config.DB.Exec(`INSERT INTO patient_workflows (appointment_id, planned_order, step_type, room_name, estimated_wait, status) VALUES (?, ?, ?, ?, ?, 'Pending')`, 
+							appointmentID, currentOrder, room, room, task.EstimatedWait)
+						currentOrder++
+					}
+					// Notify
+					h.hub.Broadcast([]byte(`{"type": "WORKFLOW_UPDATED", "patient_code": "BN-0005"}`))
+				}
 			}()
 		}
 		// ----------------------------------------

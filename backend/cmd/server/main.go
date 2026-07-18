@@ -46,11 +46,12 @@ func main() {
 		hub.HandleConnection(c)
 	}))
 
-	patientHandler := handlers.NewPatientHandler()
+	patientHandler := handlers.NewPatientHandler(hub)
 
 	// API Routes
 	app.Get("/api/v1/patients", patientHandler.GetPatients)
 	app.Get("/api/v1/patients/:id/pathway", patientHandler.GetPatientPathway)
+	app.Post("/api/v1/patients/:id/prescribe", patientHandler.PrescribeServices)
 	app.Get("/api/v1/stats", patientHandler.GetStats)
 	app.Post("/api/v1/events/trigger", eventHandler.TriggerEvent)
 
