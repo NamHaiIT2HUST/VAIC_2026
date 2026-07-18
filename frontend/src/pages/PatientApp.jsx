@@ -201,7 +201,7 @@ export default function PatientApp() {
                  <text x="70" y="100" textAnchor="middle" fontSize="12" fill="#64748b" fontWeight="bold">Sảnh Chờ</text>
                  
                  {/* Khám nội */}
-                 <rect x="140" y="30" width="100" height="60" rx="4" fill={patientTimeline.some(t => t.title.includes('Khám') && t.status === 'current') ? '#dbeafe' : '#f8fafc'} stroke={patientTimeline.some(t => t.title.includes('Khám') && t.status === 'current') ? '#3b82f6' : '#cbd5e1'} strokeWidth="2" />
+                 <rect x="140" y="30" width="100" height="60" rx="4" fill={patientTimeline.some(t => (t.title.includes('Khám') || t.title.includes('đọc kết quả')) && t.status === 'current') ? '#dbeafe' : '#f8fafc'} stroke={patientTimeline.some(t => (t.title.includes('Khám') || t.title.includes('đọc kết quả')) && t.status === 'current') ? '#3b82f6' : '#cbd5e1'} strokeWidth="2" />
                  <text x="190" y="65" textAnchor="middle" fontSize="12" fill="#334155" fontWeight="bold">Khám Nội</text>
                  
                  {/* X-Quang */}
@@ -213,7 +213,7 @@ export default function PatientApp() {
                  <text x="190" y="145" textAnchor="middle" fontSize="12" fill="#334155" fontWeight="bold">Siêu Âm</text>
                  
                  {/* Xét nghiệm */}
-                 <rect x="270" y="110" width="100" height="60" rx="4" fill={patientTimeline.some(t => t.title.includes('Sinh hóa') && t.status === 'current') ? '#dbeafe' : '#f8fafc'} stroke={patientTimeline.some(t => t.title.includes('Sinh hóa') && t.status === 'current') ? '#3b82f6' : '#cbd5e1'} strokeWidth="2" />
+                 <rect x="270" y="110" width="100" height="60" rx="4" fill={patientTimeline.some(t => (t.title.includes('Sinh hóa') || t.title.includes('Xét nghiệm') || t.title.includes('Lấy máu')) && t.status === 'current') ? '#dbeafe' : '#f8fafc'} stroke={patientTimeline.some(t => (t.title.includes('Sinh hóa') || t.title.includes('Xét nghiệm') || t.title.includes('Lấy máu')) && t.status === 'current') ? '#3b82f6' : '#cbd5e1'} strokeWidth="2" />
                  <text x="320" y="145" textAnchor="middle" fontSize="12" fill="#334155" fontWeight="bold">Xét Nghiệm</text>
 
                  {/* Current Point Dot */}
@@ -222,10 +222,10 @@ export default function PatientApp() {
                    let cx = 70; // Default: Sảnh Chờ
                    let cy = 100;
                    if (currentStep) {
-                     if (currentStep.title.includes('Khám')) { cx = 190; cy = 60; }
+                     if (currentStep.title.includes('Khám') || currentStep.title.includes('đọc kết quả')) { cx = 190; cy = 60; }
                      else if (currentStep.title.includes('X-Quang')) { cx = 320; cy = 60; }
                      else if (currentStep.title.includes('Siêu âm')) { cx = 190; cy = 140; }
-                     else if (currentStep.title.includes('Sinh hóa') || currentStep.title.includes('Xét nghiệm')) { cx = 320; cy = 140; }
+                     else if (currentStep.title.includes('Sinh hóa') || currentStep.title.includes('Xét nghiệm') || currentStep.title.includes('Lấy máu')) { cx = 320; cy = 140; }
                    }
                    return (
                      <g>
