@@ -5,6 +5,8 @@ export default function DoctorDashboard() {
   const [patients, setPatients] = useState([]);
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [note, setNote] = useState('');
+  const [chatHistory, setChatHistory] = useState([]);
+  const [successToast, setSuccessToast] = useState(null);
 
   useEffect(() => {
     const fetchPatients = async () => {
@@ -32,7 +34,7 @@ export default function DoctorDashboard() {
   }, []);
 
   const handlePrescribe = async (serviceCode) => {
-    if (!selectedPatient) return alert('Vui lòng chọn bệnh nhân');
+    if (!selectedPatient) return;
     try {
       const res = await fetch(`http://localhost:8080/api/v1/patients/${selectedPatient.patient_code}/prescribe`, {
         method: 'POST',
@@ -40,9 +42,15 @@ export default function DoctorDashboard() {
         body: JSON.stringify({ services: [serviceCode], note })
       });
       if (res.ok) {
-        alert('Đã chỉ định ' + serviceCode + ' thành công! AI đang lên lịch trình mới.');
+        setSuccessToast(`Đã chỉ định ${serviceCode} thành công!`);
+        if (note.trim()) {
+           setChatHistory([...chatHistory, { text: note, time: new Date().toLocaleTimeString(), sender: 'doctor' }]);
+           setNote('');
+        }
+        setTimeout(() => setSuccessToast(null), 3000);
       } else {
-        alert('Có lỗi xảy ra.');
+        setSuccessToast('Có lỗi xảy ra.');
+        setTimeout(() => setSuccessToast(null), 3000);
       }
     } catch (err) {
       console.error(err);
@@ -148,6 +156,12 @@ export default function DoctorDashboard() {
              {/* Patient Info Header */}
              {selectedPatient ? (
               <>
+               {/* Toast */}
+               {successToast && (
+                  <div className="absolute top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50 animate-in slide-in-from-top flex items-center gap-2">
+                    <CheckCircle size={16} /> {successToast}
+                  </div>
+               )}
                <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-start bg-slate-50/50">
                   <div>
                     <div className="flex items-center gap-3">
@@ -170,20 +184,30 @@ export default function DoctorDashboard() {
                 <div className="flex-1 flex gap-4">
                   {/* Mock X-Ray */}
                   <div className="flex-1 border rounded bg-white shadow-sm overflow-hidden flex flex-col">
-                    <div className="bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 border-b">X-Quang Ngực Thẳng</div>
-                    <div className="flex-1 flex items-center justify-center bg-black">
-                       <img src="/xray_mock.png" alt="X-Ray" className="max-h-64 object-contain opacity-90" />
+                    <div className="bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 border-b flex justify-between">
+                      <span>X-Quang Ngực Thẳng</span>
+                      <span className="text-slate-500">UID: {selectedPatient.patient_code}</span>
+                    </div>
+                    <div className="flex-1 flex items-center justify-center bg-black relative">
+                       {selectedPatient.patient_code === 'BN-0005' ? (
+                         <img src="/xray_mock.png" alt="X-Ray" className="max-h-64 object-contain opacity-90" />
+                       ) : (
+                         <div className="text-slate-500 text-sm flex flex-col items-center">
+                           <Activity className="opacity-50 mb-2" size={32} />
+                           Chưa có hình ảnh X-Quang
+                         </div>
+                       )}
                     </div>
                   </div>
                   {/* Mock Blood Test */}
                   <div className="flex-1 border rounded bg-white shadow-sm overflow-hidden flex flex-col">
-                    <div className="bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 border-b">Sinh hóa máu</div>
+                    <div className="bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 border-b">Sinh hóa máu (Mẫu: {selectedPatient.patient_code})</div>
                     <div className="flex-1 p-4 text-sm">
-                      <div className="flex justify-between py-1 border-b"><span className="text-slate-600">Glucose</span><span className="font-medium text-slate-800">5.2 mmol/L</span></div>
-                      <div className="flex justify-between py-1 border-b"><span className="text-slate-600">Urea</span><span className="font-medium text-slate-800">4.5 mmol/L</span></div>
-                      <div className="flex justify-between py-1 border-b"><span className="text-slate-600">Creatinine</span><span className="font-medium text-slate-800">80 µmol/L</span></div>
-                      <div className="flex justify-between py-1 border-b"><span className="text-slate-600">AST (GOT)</span><span className="font-medium text-slate-800">25 U/L</span></div>
-                      <div className="flex justify-between py-1"><span className="text-slate-600">ALT (GPT)</span><span className="font-medium text-slate-800">30 U/L</span></div>
+                      <div className="flex justify-between py-1 border-b"><span className="text-slate-600">Glucose</span><span className="font-medium text-slate-800">{(Math.random() * 2 + 4).toFixed(1)} mmol/L</span></div>
+                      <div className="flex justify-between py-1 border-b"><span className="text-slate-600">Urea</span><span className="font-medium text-slate-800">{(Math.random() * 3 + 3).toFixed(1)} mmol/L</span></div>
+                      <div className="flex justify-between py-1 border-b"><span className="text-slate-600">Creatinine</span><span className="font-medium text-slate-800">{Math.floor(Math.random() * 40 + 60)} µmol/L</span></div>
+                      <div className="flex justify-between py-1 border-b"><span className="text-slate-600">AST (GOT)</span><span className="font-medium text-slate-800">{Math.floor(Math.random() * 20 + 15)} U/L</span></div>
+                      <div className="flex justify-between py-1"><span className="text-slate-600">ALT (GPT)</span><span className="font-medium text-slate-800">{Math.floor(Math.random() * 20 + 20)} U/L</span></div>
                     </div>
                   </div>
                 </div>
@@ -191,15 +215,28 @@ export default function DoctorDashboard() {
 
              {/* Action Buttons */}
              <div className="p-6 border-t border-slate-200 bg-slate-50">
-                <div className="mb-4">
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Lời dặn của Bác sĩ (hiển thị trên app bệnh nhân)</label>
-                  <textarea 
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                    className="w-full border border-slate-300 rounded p-2 text-sm focus:ring focus:ring-blue-200 focus:outline-none" 
-                    rows="2" 
-                    placeholder="VD: Nhịn ăn sáng, uống nhiều nước trước khi siêu âm..."></textarea>
-                </div>
+                 {/* Chatbox style note */}
+                 <div className="mb-4 bg-white border border-slate-200 rounded-lg overflow-hidden flex flex-col">
+                    <div className="bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 border-b flex items-center gap-2">
+                       Kênh trò chuyện & Lời dặn Bác sĩ
+                    </div>
+                    <div className="p-3 h-32 overflow-y-auto bg-slate-50 flex flex-col gap-2">
+                       {chatHistory.length === 0 && <div className="text-xs text-slate-400 text-center mt-4">Chưa có lời dặn nào.</div>}
+                       {chatHistory.map((chat, idx) => (
+                         <div key={idx} className="self-end bg-blue-100 text-blue-900 px-3 py-2 rounded-xl rounded-tr-none max-w-[80%] text-sm shadow-sm relative">
+                            {chat.text}
+                            <span className="text-[9px] text-blue-500 absolute -bottom-4 right-0">{chat.time}</span>
+                         </div>
+                       ))}
+                    </div>
+                    <div className="p-2 border-t border-slate-200 bg-white flex gap-2">
+                      <textarea 
+                        value={note}
+                        onChange={(e) => setNote(e.target.value)}
+                        className="flex-1 bg-slate-50 border border-slate-200 rounded-full px-4 py-2 text-sm focus:ring focus:ring-blue-200 focus:outline-none resize-none h-10 overflow-hidden" 
+                        placeholder="Nhập lời dặn cho bệnh nhân..."></textarea>
+                    </div>
+                 </div>
                 <div className="flex gap-3">
                   <button 
                     onClick={() => handlePrescribe('lab')}

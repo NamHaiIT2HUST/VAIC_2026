@@ -7,6 +7,7 @@ export default function PatientApp() {
   const [patientTimeline, setPatientTimeline] = useState([]);
   const [aiMessage, setAiMessage] = useState('AI CareFlow đã tối ưu lộ trình: Bạn sẽ chụp X-Quang trong lúc chờ kết quả máu để tiết kiệm 45 phút chờ đợi.');
   const [doctorNote, setDoctorNote] = useState('');
+  const [alertToast, setAlertToast] = useState(null);
 
   useEffect(() => {
     const fetchPathway = async () => {
@@ -26,9 +27,11 @@ export default function PatientApp() {
       try {
         const data = JSON.parse(event.data);
         if (data.type === 'ALERT') {
+          setAlertToast(data.message);
           setAiMessage('⚠ Cảnh báo: ' + data.message + ' AI đang tự động tính toán lại lộ trình của bạn để tránh ùn tắc...');
           setTimeout(() => {
             setAiMessage('⚡ AI CareFlow đã sắp xếp lại lịch trình để tránh ùn tắc. Tiết kiệm 30 phút.');
+            setAlertToast(null);
             fetchPathway();
           }, 3000);
         } else if (data.type === 'WORKFLOW_UPDATED') {
@@ -56,6 +59,19 @@ export default function PatientApp() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col relative pb-20">
       
+      {/* Toast Alert */}
+      {alertToast && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 animate-in slide-in-from-top fade-in duration-300 w-[90%] max-w-md">
+          <div className="bg-red-500 text-white p-4 rounded-xl shadow-lg border border-red-600 flex items-start gap-3">
+            <Zap className="flex-shrink-0 animate-pulse" />
+            <div>
+              <h4 className="font-bold">CẢNH BÁO / KHẨN CẤP</h4>
+              <p className="text-sm mt-1">{alertToast}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-blue-600 text-white pt-8 pb-6 px-6 shadow-md z-10 relative md:pt-10">
         <div className="max-w-3xl mx-auto w-full">
@@ -105,15 +121,19 @@ export default function PatientApp() {
           </div>
         </div>
 
-        {/* Doctor Note */}
+        {/* Doctor Note Chat Bubble */}
         {doctorNote && (
-          <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-xl shadow-sm flex gap-4 items-start mb-4 animate-in fade-in zoom-in duration-300">
-            <div className="bg-yellow-100 text-yellow-600 p-2 rounded-lg">
-              <FileText size={24} />
+          <div className="flex items-end gap-3 mb-6 mt-2 px-2 animate-in fade-in slide-in-from-left duration-500">
+            <div className="w-10 h-10 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center flex-shrink-0 relative">
+              <FileText size={20} className="text-blue-600" />
+              <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
             </div>
-            <div>
-              <h4 className="font-bold text-yellow-900">Lời dặn của Bác sĩ</h4>
-              <p className="text-sm text-yellow-800 mt-1 italic font-medium">"{doctorNote}"</p>
+            <div className="bg-white border border-slate-200 p-4 rounded-2xl rounded-bl-none shadow-sm max-w-[85%] relative">
+              <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2">
+                Bác sĩ điều trị
+                <span className="text-[10px] text-slate-400 font-normal">{new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+              </h4>
+              <p className="text-slate-700 mt-1">{doctorNote}</p>
             </div>
           </div>
         )}
@@ -172,7 +192,7 @@ export default function PatientApp() {
               <div className={`absolute -left-[11px] top-1.5 w-5 h-5 rounded-full border-4 bg-white
                 ${item.status === 'completed' ? 'border-green-500 bg-green-500' : 
                   item.status === 'current' ? 'border-blue-500 bg-blue-100 animate-pulse' : 
-                  'border-slate-300'}`}
+                  'border-blue-400'}`}
               >
                 {item.status === 'completed' && <CheckCircle2 size={12} className="text-white absolute -top-0.5 -left-0.5" />}
               </div>
@@ -181,7 +201,7 @@ export default function PatientApp() {
               <div className={`p-5 rounded-xl shadow-sm border transition-all duration-300 relative overflow-hidden
                 ${item.status === 'current' ? 'bg-white border-blue-300 shadow-blue-100/50 scale-105 transform origin-left md:scale-100 md:-translate-y-1' : 
                   item.status === 'completed' ? 'bg-slate-50 border-slate-200 opacity-90' : 
-                  'bg-white border-slate-100 border-dashed opacity-60'}`}
+                  'bg-blue-50/50 border-blue-200 opacity-80'}`}
               >
                 {item.status === 'current' && <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>}
                 

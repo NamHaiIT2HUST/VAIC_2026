@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sort"
 	"time"
 
 	"careflow-backend/internal/config"
@@ -227,16 +228,41 @@ func (h *PatientHandler) PrescribeServices(c *fiber.Ctx) error {
 	
 	// Fallback mock nếu AI Engine không chạy (đảm bảo demo không bao giờ chết)
 	if len(aiResp.Tasks) == 0 {
-		aiResp = AIResponse{
-			PatientID: patientCode,
-			Tasks: []struct {
+		aiResp.PatientID = patientCode
+
+		priorityMap := map[string]int{
+			"lab":        1, // Blood test
+			"ultrasound": 2, // Ultrasound
+			"xray":       3, // X-Ray
+			"exam":       4, // Clinical Exam
+		}
+
+		sort.SliceStable(req.Services, func(i, j int) bool {
+			pI, okI := priorityMap[req.Services[i]]
+			if !okI {
+				pI = 99
+			}
+			pJ, okJ := priorityMap[req.Services[j]]
+			if !okJ {
+				pJ = 99
+			}
+			return pI < pJ
+		})
+
+		currentWait := 5
+		for _, srv := range req.Services {
+			aiResp.Tasks = append(aiResp.Tasks, struct {
 				StationCode       string `json:"station_code"`
 				StationName       string `json:"station_name"`
 				EstimatedWait     int    `json:"estimated_wait"`
 				EstimatedDuration int    `json:"estimated_duration"`
 			}{
-				{StationCode: req.Services[0], StationName: "Mock Station", EstimatedWait: 15, EstimatedDuration: 30},
-			},
+				StationCode:       srv,
+				StationName:       "Mock Station",
+				EstimatedWait:     currentWait,
+				EstimatedDuration: 15,
+			})
+			currentWait += 15
 		}
 	}
 	
@@ -268,7 +294,14 @@ func (h *PatientHandler) PrescribeServices(c *fiber.Ctx) error {
 	}
 	
 	if h.hub != nil {
-		h.hub.Broadcast([]byte(fmt.Sprintf(`{"type": "WORKFLOW_UPDATED", "patient_code": "%s", "note": "%s"}`, patientCode, req.Note)))
+		wsPayload := map[string]string{
+			"type": "WORKFLOW_UPDATED",
+			"patient_code": patientCode,
+			"note": req.Note,
+		}
+		if wsBytes, err := json.Marshal(wsPayload); err == nil {
+			h.hub.Broadcast(wsBytes)
+		}
 	}
 	
 	return c.JSON(fiber.Map{"status": "success", "message": "AI Re-scheduled"})

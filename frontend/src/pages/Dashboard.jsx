@@ -6,6 +6,7 @@ export default function Dashboard() {
   const [patients, setPatients] = useState([]);
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [patientPathway, setPatientPathway] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     // Fetch initial data
@@ -64,6 +65,11 @@ export default function Dashboard() {
     }
   };
 
+  const filteredPatients = patients.filter(p => 
+    (p.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+    (p.patient_code || '').toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-800">
       
@@ -94,7 +100,13 @@ export default function Dashboard() {
         <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
           <div className="relative w-full md:w-96">
             <Search className="absolute left-3 top-2.5 text-slate-400" size={20} />
-            <input type="text" placeholder="Tra cứu mã BN, tên..." className="w-full border border-slate-300 rounded-md py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500" />
+            <input 
+              type="text" 
+              placeholder="Tra cứu mã BN, tên..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full border border-slate-300 rounded-md py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500" 
+            />
           </div>
           
           <button 
@@ -139,14 +151,28 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                {patients.map((p, index) => (
-                  <tr key={p.patient_code} className={`border-b border-slate-100 hover:bg-slate-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}`}>
-                    <td className="px-6 py-4 font-mono font-medium text-slate-900">{p.patient_code}</td>
-                    <td className="px-6 py-4 font-semibold text-slate-800">{p.name}</td>
-                    <td className="px-6 py-4 text-slate-600">{p.age}t / {p.gender}</td>
-                    <td className="px-6 py-4"><StatusBadge status={p.status} /></td>
-                    <td className="px-6 py-4 font-medium text-slate-700">{p.location}</td>
-                    <td className="px-6 py-4 text-slate-500">{p.time}</td>
+                {(filteredPatients || []).map((p, index) => (
+                  <tr key={index} className="hover:bg-teal-50 transition-colors border-b last:border-0 group cursor-pointer">
+                    <td className="px-6 py-4">
+                      <p className="font-bold text-slate-800">{p.patient_code}</p>
+                      <p className="text-xs text-slate-500">{p.time}</p>
+                    </td>
+                    <td className="px-6 py-4">
+                      <p className="font-bold text-teal-900">{p.name}</p>
+                      <p className="text-xs text-slate-500">{p.age} tuổi • {p.gender}</p>
+                    </td>
+                    <td className="px-6 py-4">
+                      {p.status === 'VIP' ? (
+                        <span className="bg-red-100 text-red-700 font-bold px-2 py-1 rounded text-xs border border-red-200">CẤP CỨU / VIP</span>
+                      ) : (
+                        <span className="bg-slate-100 text-slate-700 px-2 py-1 rounded text-xs">Thường</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2 text-sm font-medium text-slate-600">
+                        {p.location}
+                      </div>
+                    </td>
                     <td className="px-6 py-4 text-right">
                       <button 
                         onClick={async () => {
@@ -165,8 +191,12 @@ export default function Dashboard() {
                 ))}
               </tbody>
             </table>
-            {patients.length === 0 && (
-              <div className="p-8 text-center text-slate-400 font-medium">Không có dữ liệu bệnh nhân trong hàng đợi.</div>
+            {filteredPatients.length === 0 && (
+              <div className="p-8 flex flex-col items-center justify-center text-slate-400">
+                <Search size={48} className="mb-4 text-slate-300 opacity-50" />
+                <p className="font-medium">Không tìm thấy bệnh nhân nào.</p>
+                <p className="text-sm">Hãy thử tìm với tên hoặc mã khác.</p>
+              </div>
             )}
           </div>
         </div>
@@ -201,8 +231,9 @@ export default function Dashboard() {
                 onClick={async () => {
                   try {
                     await fetch(`http://localhost:8080/api/v1/patients/${selectedPatient.patient_code}/prioritize`, { method: 'POST' });
-                    alert('Đã thiết lập ưu tiên cao nhất cho bệnh nhân!');
+                    setAlert(`Bệnh nhân ${selectedPatient.name} đã được ưu tiên!`);
                     setSelectedPatient(null);
+                    setTimeout(() => setAlert(null), 3000);
                   } catch(err) {}
                 }}
                 className="px-4 py-2 bg-red-100 text-red-700 font-bold text-sm rounded hover:bg-red-200 flex items-center gap-2">
