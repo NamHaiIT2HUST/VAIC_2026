@@ -14,23 +14,7 @@ export default function Dashboard() {
     const fetchPatients = async () => {
       try {
         const res = await fetch((import.meta.env.VITE_API_URL || 'http://localhost:8080') + '/api/v1/patients');
-        let data = await res.json();
-        
-        // Mock data to make demo look fully populated with AI actions
-        if (Array.isArray(data)) {
-           data = data.map(p => {
-             const num = parseInt(p.patient_code?.replace(/\D/g, '')) || 0;
-             // Chỉ giả lập cho những bệnh nhân chưa được bác sĩ khám (location mặc định là Đang phân luồng)
-             if (num >= 5 && p.location === 'Đang phân luồng') {
-                if (num % 4 === 1) p.location = 'Phòng X-Quang';
-                else if (num % 4 === 2) p.location = 'Phòng Siêu âm';
-                else if (num % 4 === 3) p.location = 'Phòng xét nghiệm Sinh hóa';
-                else p.location = 'Chờ khám lâm sàng';
-             }
-             return p;
-           });
-        }
-        
+        const data = await res.json();
         setPatients(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Failed to fetch patients", err);
@@ -296,28 +280,7 @@ export default function Dashboard() {
                           try {
                             const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/api/v1/patients/${p.patient_code}/pathway`);
                             const data = await res.json();
-                            
-                            let timeline = data.timeline || [];
-                            
-                            // Tự động sinh lộ trình giả cho các bệnh nhân Mock để demo
-                            if (timeline.length === 0 && p.location !== 'Đang phân luồng' && p.location !== 'Chờ khám lâm sàng') {
-                               timeline = [
-                                 { title: 'Khám lâm sàng (Phòng 102)', status: 'completed' }
-                               ];
-                               
-                               if (isRerouted(p)) {
-                                 timeline.push({ title: 'Lấy máu (AI ưu tiên chèn trước)', status: 'completed' });
-                               }
-                               
-                               timeline.push({ title: p.location, status: 'current' });
-                               
-                               if (!p.location.includes('X-Quang')) {
-                                 timeline.push({ title: 'Chụp X-Quang (Phòng 2)', status: 'pending' });
-                               }
-                               timeline.push({ title: 'Bác sĩ đọc kết quả', status: 'pending' });
-                            }
-                            
-                            setPatientPathway(timeline);
+                            setPatientPathway(data.timeline || []);
                           } catch(err){}
                         }}
                         className="text-teal-600 hover:text-teal-800 font-semibold text-sm flex items-center gap-1 ml-auto">
