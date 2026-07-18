@@ -4,6 +4,8 @@ import Dashboard from './pages/Dashboard';
 import PatientApp from './pages/PatientApp';
 import DoctorDashboard from './pages/DoctorDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import DemoHub from './pages/DemoHub';
+import Kiosk from './pages/Kiosk';
 
 // A simple PrivateRoute component to check role
 const PrivateRoute = ({ children, allowedRole }) => {
@@ -24,6 +26,8 @@ function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/demo" element={<DemoHub />} />
+        <Route path="/kiosk" element={<Kiosk />} />
         
         <Route 
           path="/app/nurse" 

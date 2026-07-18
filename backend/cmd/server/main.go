@@ -56,6 +56,7 @@ func main() {
 	app.Post("/api/v1/patients/:id/complete", patientHandler.CompletePatientStep)
 	app.Post("/api/v1/patients/:id/prioritize", patientHandler.PrioritizePatient)
 	app.Get("/api/v1/stats", patientHandler.GetStats)
+	app.Post("/api/v1/appointments/checkin", patientHandler.Checkin)
 	app.Post("/api/v1/events/trigger", eventHandler.TriggerEvent)
 
 	log.Printf("Server starting on port %s", cfg.Port)

@@ -11,8 +11,67 @@ import (
 	"careflow-backend/internal/config"
 	"careflow-backend/internal/models"
 	"careflow-backend/internal/websocket"
+
 	"github.com/gofiber/fiber/v2"
 )
+
+type CheckinRequest struct {
+	FullName    string `json:"full_name"`
+	Gender      string `json:"gender"`
+	DateOfBirth string `json:"date_of_birth"`
+	Phone       string `json:"phone"`
+	Symptom     string `json:"symptom"`
+	Priority    string `json:"priority"`
+}
+
+func (h *PatientHandler) Checkin(c *fiber.Ctx) error {
+	var req CheckinRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
+	}
+
+	var count int64
+	config.DB.Model(&models.Patient{}).Count(&count)
+	newPatientID := int(count) + 100 // Avoid collision with mocks
+
+	dob, _ := time.Parse("2006-01-02", req.DateOfBirth)
+	
+	newPatient := models.Patient{
+		PatientID: newPatientID,
+		FullName: req.FullName,
+		Gender: req.Gender,
+		DateOfBirth: dob,
+		Phone: req.Phone,
+		Symptom: &req.Symptom,
+		Priority: req.Priority,
+		ArrivalTime: time.Now(),
+	}
+	config.DB.Create(&newPatient)
+
+	appointmentTime := time.Now()
+	if req.Priority == "Normal" {
+		appointmentTime = time.Now().Add(30 * time.Minute)
+	}
+
+	newAppt := models.Appointment{
+		PatientID: newPatientID,
+		DoctorID: 1,
+		AppointmentTime: appointmentTime,
+		VisitType: "Initial",
+		Status: "Scheduled",
+	}
+	config.DB.Create(&newAppt)
+
+	if h.hub != nil {
+		h.hub.Broadcast([]byte(`{"type": "NEW_PATIENT_CHECKIN"}`))
+	}
+
+	return c.JSON(fiber.Map{
+		"patient_code": fmt.Sprintf("BN-%04d", newPatientID),
+		"appointment_time": appointmentTime.Format("15:04"),
+		"message": "Check-in successful. Smart Slot Allocated.",
+	})
+}
 
 type PatientHandler struct{
 	hub *websocket.Hub
@@ -199,10 +258,10 @@ type PrescribeRequest struct {
 type AIResponse struct {
 	PatientID string `json:"patient_id"`
 	Tasks     []struct {
-		StationCode       string `json:"station_code"`
-		StationName       string `json:"station_name"`
-		EstimatedWait     int    `json:"estimated_wait"`
-		EstimatedDuration int    `json:"estimated_duration"`
+		TaskID    string `json:"task_id"`
+		Station   string `json:"station"`
+		TimeStart int    `json:"time_start"`
+		TimeEnd   int    `json:"time_end"`
 	} `json:"tasks"`
 }
 
@@ -252,15 +311,15 @@ func (h *PatientHandler) PrescribeServices(c *fiber.Ctx) error {
 		currentWait := 5
 		for _, srv := range req.Services {
 			aiResp.Tasks = append(aiResp.Tasks, struct {
-				StationCode       string `json:"station_code"`
-				StationName       string `json:"station_name"`
-				EstimatedWait     int    `json:"estimated_wait"`
-				EstimatedDuration int    `json:"estimated_duration"`
+				TaskID    string `json:"task_id"`
+				Station   string `json:"station"`
+				TimeStart int    `json:"time_start"`
+				TimeEnd   int    `json:"time_end"`
 			}{
-				StationCode:       srv,
-				StationName:       "Mock Station",
-				EstimatedWait:     currentWait,
-				EstimatedDuration: 15,
+				TaskID:    srv + "-mock",
+				Station:   srv,
+				TimeStart: currentWait,
+				TimeEnd:   currentWait + 15,
 			})
 			currentWait += 15
 		}
@@ -282,14 +341,14 @@ func (h *PatientHandler) PrescribeServices(c *fiber.Ctx) error {
 	currentOrder := 5
 	for _, task := range aiResp.Tasks {
 		stepType := "Clinical Examination"
-		room := "Phòng " + task.StationCode
-		if task.StationCode == "ultrasound" { stepType = "Ultrasound"; room = "Phòng Siêu âm" }
-		if task.StationCode == "xray" { stepType = "X-Ray"; room = "Phòng X-Quang" }
-		if task.StationCode == "lab" { stepType = "Blood Test"; room = "Phòng xét nghiệm Sinh hóa" }
+		room := "Phòng " + task.Station
+		if task.Station == "ultrasound" { stepType = "Ultrasound"; room = "Phòng Siêu âm" }
+		if task.Station == "xray" { stepType = "X-Ray"; room = "Phòng X-Quang" }
+		if task.Station == "lab" { stepType = "Blood Test"; room = "Phòng xét nghiệm Sinh hóa" }
 		
 		// Use Exec for quick raw inserts
 		config.DB.Exec(`INSERT INTO patientworkflow (appointment_id, planned_order, step_type, room_name, estimated_wait, status) VALUES (?, ?, ?, ?, ?, 'Pending')`, 
-			appointment.AppointmentID, currentOrder, stepType, room, task.EstimatedWait)
+			appointment.AppointmentID, currentOrder, stepType, room, task.TimeStart)
 		currentOrder++
 	}
 	

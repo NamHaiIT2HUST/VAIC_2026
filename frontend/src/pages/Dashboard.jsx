@@ -156,23 +156,27 @@ export default function Dashboard() {
                   <tr key={index} className="hover:bg-teal-50 transition-colors border-b last:border-0 group cursor-pointer">
                     <td className="px-6 py-4">
                       <p className="font-bold text-slate-800">{p.patient_code}</p>
-                      <p className="text-xs text-slate-500">{p.time}</p>
                     </td>
                     <td className="px-6 py-4">
                       <p className="font-bold text-teal-900">{p.name}</p>
-                      <p className="text-xs text-slate-500">{p.age} tuổi • {p.gender}</p>
+                    </td>
+                    <td className="px-6 py-4 text-slate-600 text-sm">
+                      {p.age} tuổi • {p.gender}
                     </td>
                     <td className="px-6 py-4">
-                      {p.status === 'VIP' ? (
+                      {p.status === 'Emergency' || p.status === 'VIP' ? (
                         <span className="bg-red-100 text-red-700 font-bold px-2 py-1 rounded text-xs border border-red-200">CẤP CỨU / VIP</span>
                       ) : (
-                        <span className="bg-slate-100 text-slate-700 px-2 py-1 rounded text-xs">Thường</span>
+                        <span className="bg-slate-100 text-slate-700 px-2 py-1 rounded text-xs font-semibold">Khám Thường</span>
                       )}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2 text-sm font-medium text-slate-600">
                         {p.location}
                       </div>
+                    </td>
+                    <td className="px-6 py-4 text-slate-500 text-sm font-medium">
+                      {p.time}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <button 
