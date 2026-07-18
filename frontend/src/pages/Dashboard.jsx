@@ -12,7 +12,7 @@ export default function Dashboard() {
     // Fetch initial data
     const fetchPatients = async () => {
       try {
-        const res = await fetch('http://localhost:8080/api/v1/patients');
+        const res = await fetch((import.meta.env.VITE_API_URL || 'http://localhost:8080') + '/api/v1/patients');
         const data = await res.json();
         setPatients(Array.isArray(data) ? data : []);
       } catch (err) {
@@ -46,7 +46,7 @@ export default function Dashboard() {
 
   const triggerMachineFailure = async () => {
     try {
-      await fetch('http://localhost:8080/api/v1/events/trigger', {
+      await fetch((import.meta.env.VITE_API_URL || 'http://localhost:8080') + '/api/v1/events/trigger', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -183,7 +183,7 @@ export default function Dashboard() {
                         onClick={async () => {
                           setSelectedPatient(p);
                           try {
-                            const res = await fetch(`http://localhost:8080/api/v1/patients/${p.patient_code}/pathway`);
+                            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/api/v1/patients/${p.patient_code}/pathway`);
                             const data = await res.json();
                             setPatientPathway(data.timeline || []);
                           } catch(err){}
@@ -235,7 +235,7 @@ export default function Dashboard() {
               <button 
                 onClick={async () => {
                   try {
-                    await fetch(`http://localhost:8080/api/v1/patients/${selectedPatient.patient_code}/prioritize`, { method: 'POST' });
+                    await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/api/v1/patients/${selectedPatient.patient_code}/prioritize`, { method: 'POST' });
                     setAlert(`Bệnh nhân ${selectedPatient.name} đã được ưu tiên!`);
                     setSelectedPatient(null);
                     setTimeout(() => setAlert(null), 3000);

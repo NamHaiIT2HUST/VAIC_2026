@@ -11,7 +11,7 @@ export default function DoctorDashboard() {
   useEffect(() => {
     const fetchPatients = async () => {
       try {
-        const res = await fetch('http://localhost:8080/api/v1/patients');
+        const res = await fetch((import.meta.env.VITE_API_URL || 'http://localhost:8080') + '/api/v1/patients');
         const data = await res.json();
         setPatients(Array.isArray(data) ? data : []);
       } catch (err) {
@@ -37,7 +37,7 @@ export default function DoctorDashboard() {
   const handlePrescribe = async (serviceCode) => {
     if (!selectedPatient) return;
     try {
-      const res = await fetch(`http://localhost:8080/api/v1/patients/${selectedPatient.patient_code}/prescribe`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/api/v1/patients/${selectedPatient.patient_code}/prescribe`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ services: [serviceCode], note })
@@ -62,7 +62,7 @@ export default function DoctorDashboard() {
   const handleCallPatient = async () => {
     if (!selectedPatient) return;
     try {
-      await fetch(`http://localhost:8080/api/v1/patients/${selectedPatient.patient_code}/call`, { method: 'POST' });
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/api/v1/patients/${selectedPatient.patient_code}/call`, { method: 'POST' });
       alert(`Đã gọi bệnh nhân ${selectedPatient.patient_code}`);
     } catch (err) {}
   };
@@ -70,7 +70,7 @@ export default function DoctorDashboard() {
   const handleComplete = async () => {
     if (!selectedPatient) return;
     try {
-      await fetch(`http://localhost:8080/api/v1/patients/${selectedPatient.patient_code}/complete`, { method: 'POST' });
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/api/v1/patients/${selectedPatient.patient_code}/complete`, { method: 'POST' });
       alert('Đã kết luận và cập nhật lộ trình!');
       setSelectedPatient(null);
     } catch (err) {}

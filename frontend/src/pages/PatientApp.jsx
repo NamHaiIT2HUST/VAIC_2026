@@ -12,7 +12,7 @@ export default function PatientApp() {
   useEffect(() => {
     const fetchPathway = async () => {
       try {
-        const res = await fetch('http://localhost:8080/api/v1/patients/BN-0005/pathway');
+        const res = await fetch((import.meta.env.VITE_API_URL || 'http://localhost:8080') + '/api/v1/patients/BN-0005/pathway');
         const data = await res.json();
         setPatient(data.patient || null);
         setPatientTimeline(Array.isArray(data.timeline) ? data.timeline : []);

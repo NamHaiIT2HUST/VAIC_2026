@@ -73,6 +73,32 @@ func (h *PatientHandler) Checkin(c *fiber.Ctx) error {
 	})
 }
 
+func (h *PatientHandler) SeedData(c *fiber.Ctx) error {
+	// Simple seed for 5 patients
+	dob, _ := time.Parse("2006-01-02", "1990-01-01")
+	for i := 1; i <= 5; i++ {
+		p := models.Patient{
+			PatientID: i,
+			FullName: fmt.Sprintf("Bệnh nhân %d", i),
+			Gender: "Male",
+			DateOfBirth: dob,
+			Priority: "Normal",
+			ArrivalTime: time.Now().Add(time.Duration(i*10) * time.Minute),
+		}
+		config.DB.Create(&p)
+		
+		a := models.Appointment{
+			PatientID: i,
+			DoctorID: 1,
+			AppointmentTime: time.Now().Add(time.Duration(i*30) * time.Minute),
+			VisitType: "Initial",
+			Status: "Scheduled",
+		}
+		config.DB.Create(&a)
+	}
+	return c.JSON(fiber.Map{"message": "Seeded 5 patients successfully"})
+}
+
 type PatientHandler struct{
 	hub *websocket.Hub
 }

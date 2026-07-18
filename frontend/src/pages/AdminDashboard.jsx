@@ -10,7 +10,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await fetch('http://localhost:8080/api/v1/stats');
+        const res = await fetch((import.meta.env.VITE_API_URL || 'http://localhost:8080') + '/api/v1/stats');
         const data = await res.json();
         setStats(data);
       } catch (err) {
