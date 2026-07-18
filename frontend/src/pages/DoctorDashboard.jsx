@@ -19,6 +19,7 @@ export default function DoctorDashboard() {
     fetchPatients();
   }, []);
 
+  const handlePrescribe = async (serviceCode) => {
     if (!selectedPatient) return alert('Vui lòng chọn bệnh nhân');
     try {
       const res = await fetch(`http://localhost:8080/api/v1/patients/${selectedPatient.patient_code}/prescribe`, {
