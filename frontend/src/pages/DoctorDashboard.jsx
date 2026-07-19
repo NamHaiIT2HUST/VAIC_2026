@@ -7,6 +7,20 @@ export default function DoctorDashboard() {
   const [note, setNote] = useState('');
   const [chatHistory, setChatHistory] = useState([]);
   const [successToast, setSuccessToast] = useState(null);
+  const [activeTab, setActiveTab] = useState('queue');
+  const [records, setRecords] = useState([]);
+
+  useEffect(() => {
+    // Load records from local storage
+    const savedRecords = JSON.parse(localStorage.getItem('doctorRecords') || '[]');
+    setRecords(savedRecords);
+  }, []);
+
+  // Reset chat history when selecting a new patient
+  useEffect(() => {
+    setChatHistory([]);
+    setNote('');
+  }, [selectedPatient?.patient_code]);
 
   useEffect(() => {
     const fetchPatients = async () => {
@@ -71,7 +85,19 @@ export default function DoctorDashboard() {
     if (!selectedPatient) return;
     try {
       await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/api/v1/patients/${selectedPatient.patient_code}/complete`, { method: 'POST' });
-      alert('Đã kết luận và cập nhật lộ trình!');
+      
+      // Save record to local storage
+      const newRecord = {
+        patient_code: selectedPatient.patient_code,
+        name: selectedPatient.name,
+        time: new Date().toLocaleString(),
+        notes: chatHistory,
+      };
+      const updatedRecords = [newRecord, ...records];
+      setRecords(updatedRecords);
+      localStorage.setItem('doctorRecords', JSON.stringify(updatedRecords));
+
+      alert('Đã kết luận và lưu hồ sơ bệnh án!');
       setSelectedPatient(null);
     } catch (err) {}
   };
@@ -90,10 +116,14 @@ export default function DoctorDashboard() {
         </div>
         
         <nav className="flex-1 py-4">
-          <button className="w-full flex items-center gap-3 bg-blue-800/50 border-l-4 border-blue-400 px-6 py-3 text-sm font-semibold">
+          <button 
+            onClick={() => setActiveTab('queue')}
+            className={`w-full flex items-center gap-3 px-6 py-3 text-sm font-semibold transition-colors ${activeTab === 'queue' ? 'bg-blue-800/50 border-l-4 border-blue-400' : 'hover:bg-blue-800/30 border-l-4 border-transparent text-blue-100'}`}>
             <User size={18} /> Danh sách Hàng đợi
           </button>
-          <button className="w-full flex items-center gap-3 hover:bg-blue-800/30 border-l-4 border-transparent px-6 py-3 text-sm font-medium text-blue-100 transition-colors">
+          <button 
+            onClick={() => setActiveTab('records')}
+            className={`w-full flex items-center gap-3 px-6 py-3 text-sm font-semibold transition-colors ${activeTab === 'records' ? 'bg-blue-800/50 border-l-4 border-blue-400' : 'hover:bg-blue-800/30 border-l-4 border-transparent text-blue-100'}`}>
             <FileText size={18} /> Hồ sơ Bệnh án
           </button>
         </nav>
@@ -116,7 +146,9 @@ export default function DoctorDashboard() {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="flex-1 overflow-y-auto p-8">
+          {activeTab === 'queue' ? (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
           
           {/* Patient Queue List (Left Side - 4 columns) */}
           <div className="lg:col-span-4 bg-white rounded-lg border border-slate-200 shadow-sm flex flex-col h-full">
@@ -270,6 +302,46 @@ export default function DoctorDashboard() {
              )}
 
           </div>
+          </div>
+          ) : (
+            <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6 h-full overflow-y-auto">
+              <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                <FileText className="text-blue-600" /> Hồ sơ Bệnh án Đã Lưu
+              </h2>
+              {records.length === 0 ? (
+                <div className="flex flex-col items-center justify-center text-slate-400 py-10">
+                  <FileText size={48} className="mb-4 text-slate-300" />
+                  <p>Chưa có hồ sơ nào được lưu.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {records.map((r, i) => (
+                    <div key={i} className="border border-slate-200 rounded-lg p-5 bg-slate-50 shadow-sm hover:shadow transition-shadow">
+                      <div className="flex justify-between items-start border-b border-slate-200 pb-3 mb-3">
+                        <div>
+                          <h3 className="font-bold text-lg text-blue-800">{r.name}</h3>
+                          <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded border border-blue-200 font-mono mt-1 inline-block">{r.patient_code}</span>
+                        </div>
+                        <div className="text-xs text-slate-500 flex items-center gap-1 bg-white px-2 py-1 rounded border border-slate-200 shadow-sm">
+                          <Clock size={12} /> {r.time}
+                        </div>
+                      </div>
+                      <div className="bg-white rounded border border-slate-200 p-3">
+                        <h4 className="font-semibold text-xs text-slate-500 uppercase mb-2">Lời dặn / Ghi chú lâm sàng</h4>
+                        <ul className="list-disc pl-5 text-sm text-slate-700 space-y-1">
+                          {r.notes && r.notes.length > 0 ? (
+                            r.notes.map((n, idx) => <li key={idx}>{n.text}</li>)
+                          ) : (
+                            <li className="text-slate-400 italic">Không có lời dặn nào được lưu.</li>
+                          )}
+                        </ul>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

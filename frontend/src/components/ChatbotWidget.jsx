@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { MessageSquare, X, Send, Bot, User } from 'lucide-react';
 
-export default function ChatbotWidget() {
+export default function ChatbotWidget({ patientCode = 'BN-0005' }) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
     { id: 1, type: 'bot', text: 'Chào bạn, mình là Trợ lý ảo AI của CareFlow. Bạn cần hỏi gì về quy trình khám bệnh hôm nay?' }
@@ -29,12 +29,13 @@ export default function ChatbotWidget() {
     setMessages(prev => [...prev, { id: botMsgId, type: 'bot', text: '' }]);
 
     try {
-      const res = await fetch('http://localhost:8000/api/ai/chat', {
+      const aiUrl = import.meta.env.VITE_AI_URL || 'http://localhost:8000';
+      const res = await fetch(`${aiUrl}/api/ai/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           query: userMsg.text,
-          patient_id: "BN-0005",
+          patient_id: patientCode,
           required_services: [] 
         })
       });

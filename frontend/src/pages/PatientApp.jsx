@@ -1,18 +1,42 @@
 import { useState, useEffect } from 'react';
-import { Activity, FileText, UserPlus, CheckCircle2, Zap, Clock, MapPin } from 'lucide-react';
+import { Activity, FileText, UserPlus, CheckCircle2, Zap, Clock, MapPin, Search } from 'lucide-react';
 import ChatbotWidget from '../components/ChatbotWidget';
 
 export default function PatientApp() {
   const [patient, setPatient] = useState(null);
   const [patientTimeline, setPatientTimeline] = useState([]);
   const [aiMessage, setAiMessage] = useState('AI CareFlow đã tối ưu lộ trình: Bạn sẽ chụp X-Quang trong lúc chờ kết quả máu để tiết kiệm 45 phút chờ đợi.');
-  const [doctorNote, setDoctorNote] = useState('');
+  const [doctorNote, setDoctorNote] = useState({ text: '', time: '' });
   const [alertToast, setAlertToast] = useState(null);
+  const [patientCode, setPatientCode] = useState('BN-0005');
+  const [allPatients, setAllPatients] = useState([]);
 
   useEffect(() => {
+    // Fetch danh sách bệnh nhân cho dropdown
+    const fetchPatients = async () => {
+      try {
+        const res = await fetch((import.meta.env.VITE_API_URL || 'http://localhost:8080') + '/api/v1/patients');
+        const data = await res.json();
+        setAllPatients(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Failed to fetch patients", err);
+      }
+    };
+    fetchPatients();
+  }, []);
+
+  useEffect(() => {
+    // Load saved doctor note from localStorage
+    const savedNotes = JSON.parse(localStorage.getItem('patientNotes') || '{}');
+    if (savedNotes[patientCode]) {
+      setDoctorNote(savedNotes[patientCode]);
+    } else {
+      setDoctorNote({ text: '', time: '' });
+    }
+
     const fetchPathway = async () => {
       try {
-        const res = await fetch((import.meta.env.VITE_API_URL || 'http://localhost:8080') + '/api/v1/patients/BN-0005/pathway');
+        const res = await fetch((import.meta.env.VITE_API_URL || 'http://localhost:8080') + `/api/v1/patients/${patientCode}/pathway`);
         const data = await res.json();
         setPatient(data.patient || null);
         setPatientTimeline(Array.isArray(data.timeline) ? data.timeline : []);
@@ -36,10 +60,21 @@ export default function PatientApp() {
             fetchPathway();
           }, 3000);
         } else if (data.type === 'WORKFLOW_UPDATED') {
-          if (data.note) setDoctorNote(data.note);
+          if (data.patient_code && data.patient_code !== patientCode) return; // Bỏ qua nếu của bệnh nhân khác
+          if (data.note) {
+            const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const noteObj = { text: data.note, time: timeStr };
+            setDoctorNote(noteObj);
+            
+            // Save to localStorage to persist across reloads
+            const currentNotes = JSON.parse(localStorage.getItem('patientNotes') || '{}');
+            currentNotes[patientCode] = noteObj;
+            localStorage.setItem('patientNotes', JSON.stringify(currentNotes));
+          }
           setAiMessage('⚡ Lộ trình của bạn đã được cập nhật.');
           fetchPathway();
         } else if (data.type === 'CALL_PATIENT') {
+          if (data.patient_code && data.patient_code !== patientCode) return; // Bỏ qua nếu của bệnh nhân khác
           setAiMessage('📢 BÁC SĨ GỌI: ' + data.message);
           // Play a sound or use SpeechSynthesis
           const utterance = new SpeechSynthesisUtterance(data.message);
@@ -55,7 +90,7 @@ export default function PatientApp() {
       } catch (err) {}
     };
     return () => socket.close();
-  }, []);
+  }, [patientCode]);
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col relative pb-20">
@@ -76,14 +111,28 @@ export default function PatientApp() {
       {/* Header */}
       <div className="bg-blue-600 text-white pt-8 pb-6 px-6 shadow-md z-10 relative md:pt-10">
         <div className="max-w-3xl mx-auto w-full">
-          <div className="flex justify-between items-start">
+          <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
             <div>
               <h2 className="text-2xl font-bold opacity-90">{patient?.name || 'Đang tải...'}</h2>
-              <p className="text-blue-100 text-sm mt-1">Mã BN: {patient?.patient_code || 'BN-...'} | {patient?.gender || 'N/A'}, {patient?.age || '--'} tuổi</p>
+              <div className="flex items-center gap-2 mt-2">
+                <select 
+                  value={patientCode} 
+                  onChange={(e) => setPatientCode(e.target.value)}
+                  className="bg-blue-700 text-white border border-blue-400 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+                >
+                  {allPatients.map(p => (
+                    <option key={p.patient_code} value={p.patient_code}>
+                      {p.patient_code} - {p.name}
+                    </option>
+                  ))}
+                  {allPatients.length === 0 && <option value="BN-0005">BN-0005</option>}
+                </select>
+                <span className="text-blue-100 text-sm">| {patient?.gender || 'N/A'}, {patient?.age || '--'} tuổi</span>
+              </div>
             </div>
             <button 
               onClick={() => { localStorage.removeItem('userRole'); window.location.href = '/login'; }}
-              className="text-sm bg-blue-700 bg-opacity-50 hover:bg-opacity-80 px-4 py-2 rounded-full transition-colors font-medium"
+              className="text-sm bg-blue-700 bg-opacity-50 hover:bg-opacity-80 px-4 py-2 rounded-full transition-colors font-medium self-end md:self-auto whitespace-nowrap"
             >
               Thoát
             </button>
@@ -123,7 +172,7 @@ export default function PatientApp() {
         </div>
 
         {/* Doctor Note Chat Bubble */}
-        {doctorNote && (
+        {doctorNote.text && (
           <div className="flex items-end gap-3 mb-6 mt-2 px-2 animate-in fade-in slide-in-from-left duration-500">
             <div className="w-10 h-10 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center flex-shrink-0 relative">
               <FileText size={20} className="text-blue-600" />
@@ -132,9 +181,9 @@ export default function PatientApp() {
             <div className="bg-white border border-slate-200 p-4 rounded-2xl rounded-bl-none shadow-sm max-w-[85%] relative">
               <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2">
                 Bác sĩ điều trị
-                <span className="text-[10px] text-slate-400 font-normal">{new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                <span className="text-[10px] text-slate-400 font-normal">{doctorNote.time}</span>
               </h4>
-              <p className="text-slate-700 mt-1">{doctorNote}</p>
+              <p className="text-slate-700 mt-1">{doctorNote.text}</p>
             </div>
           </div>
         )}
@@ -152,7 +201,7 @@ export default function PatientApp() {
                  <text x="70" y="100" textAnchor="middle" fontSize="12" fill="#64748b" fontWeight="bold">Sảnh Chờ</text>
                  
                  {/* Khám nội */}
-                 <rect x="140" y="30" width="100" height="60" rx="4" fill={patientTimeline.some(t => t.title.includes('Khám') && t.status === 'current') ? '#dbeafe' : '#f8fafc'} stroke={patientTimeline.some(t => t.title.includes('Khám') && t.status === 'current') ? '#3b82f6' : '#cbd5e1'} strokeWidth="2" />
+                 <rect x="140" y="30" width="100" height="60" rx="4" fill={patientTimeline.some(t => (t.title.includes('Khám') || t.title.includes('đọc kết quả')) && t.status === 'current') ? '#dbeafe' : '#f8fafc'} stroke={patientTimeline.some(t => (t.title.includes('Khám') || t.title.includes('đọc kết quả')) && t.status === 'current') ? '#3b82f6' : '#cbd5e1'} strokeWidth="2" />
                  <text x="190" y="65" textAnchor="middle" fontSize="12" fill="#334155" fontWeight="bold">Khám Nội</text>
                  
                  {/* X-Quang */}
@@ -164,7 +213,7 @@ export default function PatientApp() {
                  <text x="190" y="145" textAnchor="middle" fontSize="12" fill="#334155" fontWeight="bold">Siêu Âm</text>
                  
                  {/* Xét nghiệm */}
-                 <rect x="270" y="110" width="100" height="60" rx="4" fill={patientTimeline.some(t => t.title.includes('Sinh hóa') && t.status === 'current') ? '#dbeafe' : '#f8fafc'} stroke={patientTimeline.some(t => t.title.includes('Sinh hóa') && t.status === 'current') ? '#3b82f6' : '#cbd5e1'} strokeWidth="2" />
+                 <rect x="270" y="110" width="100" height="60" rx="4" fill={patientTimeline.some(t => (t.title.includes('Sinh hóa') || t.title.includes('Xét nghiệm') || t.title.includes('Lấy máu')) && t.status === 'current') ? '#dbeafe' : '#f8fafc'} stroke={patientTimeline.some(t => (t.title.includes('Sinh hóa') || t.title.includes('Xét nghiệm') || t.title.includes('Lấy máu')) && t.status === 'current') ? '#3b82f6' : '#cbd5e1'} strokeWidth="2" />
                  <text x="320" y="145" textAnchor="middle" fontSize="12" fill="#334155" fontWeight="bold">Xét Nghiệm</text>
 
                  {/* Current Point Dot */}
@@ -173,10 +222,10 @@ export default function PatientApp() {
                    let cx = 70; // Default: Sảnh Chờ
                    let cy = 100;
                    if (currentStep) {
-                     if (currentStep.title.includes('Khám')) { cx = 190; cy = 60; }
+                     if (currentStep.title.includes('Khám') || currentStep.title.includes('đọc kết quả')) { cx = 190; cy = 60; }
                      else if (currentStep.title.includes('X-Quang')) { cx = 320; cy = 60; }
                      else if (currentStep.title.includes('Siêu âm')) { cx = 190; cy = 140; }
-                     else if (currentStep.title.includes('Sinh hóa') || currentStep.title.includes('Xét nghiệm')) { cx = 320; cy = 140; }
+                     else if (currentStep.title.includes('Sinh hóa') || currentStep.title.includes('Xét nghiệm') || currentStep.title.includes('Lấy máu')) { cx = 320; cy = 140; }
                    }
                    return (
                      <g>
@@ -256,7 +305,7 @@ export default function PatientApp() {
         <button className="flex flex-col items-center p-2 hover:text-slate-600 transition-colors"><UserPlus size={24} /><span className="text-[10px] font-bold mt-1">Tài khoản</span></button>
       </div>
 
-      <ChatbotWidget />
+      <ChatbotWidget patientCode={patientCode} />
     </div>
   );
 }

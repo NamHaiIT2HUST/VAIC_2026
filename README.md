@@ -1,77 +1,70 @@
 <div align="center">
-  <img src="https://img.shields.io/badge/VAIC%202026-Vietnam%20AI%20Innovation%20Challenge-blue?style=for-the-badge&logo=google" alt="VAIC 2026" />
-  <img src="https://img.shields.io/badge/Status-Checkpoint%202%20Submitted-success?style=for-the-badge" alt="Status" />
+  <img src="https://img.shields.io/badge/VAIC%202026-Vietnam%20AI%20Innovation%20Challenge-1e40af?style=for-the-badge&logo=google" alt="VAIC 2026" />
+  <img src="https://img.shields.io/badge/Status-Checkpoint%202%20Submitted-10b981?style=for-the-badge" alt="Status" />
+  <img src="https://img.shields.io/badge/Demo-Ready_for_Recording-ef4444?style=for-the-badge" alt="Demo Ready" />
+  <br/><br/>
   
-  <br/>
-  <br/>
-  
-  <h1>🏥 CareFlow AI - Hệ thống Điều phối & Tối ưu hóa Luồng Bệnh nhân</h1>
-  <p>Giải pháp <b>Toàn diện & Tự động</b> giúp bệnh viện giải quyết triệt để vấn đề ùn tắc cục bộ, giảm thiểu thời gian chờ đợi và nâng cao trải nghiệm khám chữa bệnh thông qua sức mạnh của AI và kiến trúc Event-Driven Real-time.</p>
+  <h1>🏥 CareFlow AI<br/>Hệ thống Điều phối & Tối ưu hóa Luồng Bệnh nhân</h1>
+  <p>Giải pháp <b>Toàn diện & Tự động</b> giải quyết triệt để tình trạng ùn tắc cục bộ, giảm thiểu thời gian chờ đợi và nâng cao trải nghiệm khám chữa bệnh dựa trên cốt lõi AI và kiến trúc Event-Driven Real-time.</p>
 </div>
 
 ---
 
-## 🎯 Vấn đề & Bài toán (The Pain)
+## 🎯 Đặt vấn đề (Problem Statement)
 
-Tại các bệnh viện đa khoa lớn, tình trạng **"thắt cổ chai"** thường xuyên xảy ra:
-- ⏳ Bệnh nhân dồn ứ cục bộ vào một khung giờ, trong khi các khung giờ khác bị bỏ trống.
-- 🔄 Bệnh nhân đi lạc, xếp nhầm hàng, phải quay lại nhiều lần do thiếu chỉ dẫn rõ ràng.
-- 🤷 Cả bệnh nhân lẫn nhân viên y tế đều mù mờ về thời gian chờ thực tế ở từng phòng ban (Khám lâm sàng, Xét nghiệm, Siêu âm, X-Quang).
-- 🧩 Dữ liệu lịch hẹn, tiếp nhận, cận lâm sàng bị phân mảnh, không có một cái nhìn toàn cảnh tập trung.
+Tại các bệnh viện đa khoa lớn, tình trạng thắt cổ chai trong quy trình khám chữa bệnh là thách thức dai dẳng:
+- **Phân bổ không đồng đều:** Bệnh nhân dồn ứ cục bộ vào một khung giờ hoặc một phòng chức năng (X-Quang, Siêu âm), trong khi các thiết bị khác bị bỏ trống.
+- **Trải nghiệm chờ đợi thụ động:** Bệnh nhân thiếu thông tin về thời gian chờ thực tế và lộ trình tiếp theo, dẫn đến tâm lý hoang mang và di chuyển sai luồng.
+- **Dữ liệu phân mảnh:** Thiếu sự liên kết thời gian thực giữa các khâu (Tiếp nhận, Lâm sàng, Cận lâm sàng), khiến Ban Quản lý khó đưa ra quyết định điều phối tức thời khi có sự cố.
 
-## 💡 Giải pháp CareFlow AI (The Cure)
+## 💡 Giải pháp CareFlow AI (Our Solution)
 
-**CareFlow AI** là một hệ thống phối hợp thông minh liên kết toàn bộ dữ liệu từ khâu Đặt lịch, Kiosk Tiếp nhận (Check-in), Phòng khám (Clinic), Cận lâm sàng (Lab/Imaging) cho đến Bảng điều khiển quản lý trung tâm.
+**CareFlow AI** là hệ thống điều phối thông minh (Smart Coordination System) liên kết toàn bộ dữ liệu từ khâu Đặt lịch, Tiếp nhận, Khám bệnh đến Cận lâm sàng, tạo ra một luồng vận hành xuyên suốt và tự động hoá.
 
-### 🌟 3 Tính năng Cốt lõi (Core Innovations)
+### 🌟 Tính năng Cốt lõi (Core Innovations)
 
-1. **AI Appointment Coordination & Smart Kiosk**: Thay vì chỉ cấp số thứ tự tuyến tính, AI Engine tự động phân tích độ ưu tiên (Khám thường / Cấp cứu VIP) và tải trọng hiện tại của bệnh viện để chỉ định khung giờ phù hợp ngay tại cửa vào (Kiosk), giúp **san phẳng đỉnh tải (load balancing)**.
-2. **AI Patient Routing (OR-Tools CP Solver)**: Khi bác sĩ kê đơn Cận lâm sàng, hệ thống AI tự động giải quyết bài toán Ràng buộc (Constraint Programming) để sắp xếp **thứ tự đi các phòng tối ưu nhất** cho bệnh nhân, tránh đi lại lòng vòng và giảm độ trễ.
-3. **Real-time Wait-time Estimation & Tracking**: Dựa trên số lượng bệnh nhân trong hàng đợi và thời gian xử lý trung bình của từng khoa, hệ thống tính toán và liên tục cập nhật lộ trình trực tiếp lên Ứng dụng điện thoại của Bệnh nhân qua **WebSocket**. 
-4. **Trợ lý ảo RAG Chatbot**: Hỗ trợ giải đáp thắc mắc của bệnh nhân (VD: "Phòng X-Quang ở đâu?", "Có cần nhịn ăn không?") ngay lập tức.
+1. **🚀 AI Patient Routing & Sequencing (OR-Tools CP Solver):** 
+   - Khi bác sĩ chỉ định các dịch vụ cận lâm sàng, hệ thống AI tự động giải quyết bài toán Ràng buộc (Constraint Programming) để sắp xếp **thứ tự thực hiện tối ưu nhất**. 
+   - Thuật toán tính toán dựa trên thời gian chờ hiện tại của từng phòng, yêu cầu chuyên môn (nhịn ăn, lấy máu trước) để giảm tối đa thời gian chờ và di chuyển lòng vòng.
 
----
+2. **⚡ Dynamic Real-time Adjustment (Visual Incident Management):** 
+   - Tự động điều phối lại toàn bộ luồng bệnh nhân khi có sự cố bất ngờ (Ví dụ: Máy X-Quang hỏng, có ca cấp cứu chen ngang). 
+   - Sự thay đổi này được cập nhật ngay lập tức đến mọi thiết bị liên quan (Re-routing trực tiếp).
 
-## 🚀 Trải nghiệm Demo Trực tiếp (Dành cho Ban Giám Khảo)
+3. **⏱️ Wait-time Estimation & Tracking:** 
+   - Tính toán và hiển thị thời gian chờ dự kiến liên tục theo thời gian thực (Real-time). 
+   - Bệnh nhân được chỉ dẫn trực tiếp qua App cá nhân thông qua kết nối **WebSocket**, kèm Sơ đồ di chuyển (SVG Map) nhấp nháy động.
 
-Chúng tôi thiết kế riêng một **màn hình chia 3 cột (Live Demo Hub)** để Ban giám khảo có thể nhìn thấy sự đồng bộ thời gian thực của kiến trúc Event-Driven mà không cần dùng đến 3 thiết bị khác nhau.
+4. **🎛️ Smart Nurse/Admin Dashboard:** 
+   - Bảng điều khiển trung tâm cung cấp bức tranh toàn cảnh về tải trọng bệnh viện (Department Load).
+   - Theo dõi KPI thời gian chờ và hỗ trợ thao tác Tắt/Bật cấu hình máy móc trực quan (1-click action).
 
-👉 **[Bấm vào đây để vào Trang Demo Hub Trực tiếp](https://careflow-ai.vercel.app/demo)** *(Lưu ý: Thay domain thực tế của bạn)*
-
-### 🎬 Kịch bản Test 1 phút:
-1. Mở trang **[Kiosk Tiếp nhận](https://careflow-ai.vercel.app/kiosk)**.
-2. Khai báo 1 bệnh nhân và đánh dấu mức độ "Khám thường" hoặc "Cấp cứu VIP". 
-3. Chuyển sang trang **[Demo Hub](https://careflow-ai.vercel.app/demo)**. Bạn sẽ thấy Bệnh nhân vừa tạo nhảy ngay vào hàng chờ của Y tá (Cột 1) với huy hiệu tương ứng.
-4. Ở Cột 2 (Bác sĩ), bấm **"Bắt đầu khám"** và **"Kê đơn Cận lâm sàng"** cho bệnh nhân đó.
-5. Quan sát Cột 3 (App Bệnh nhân): Luồng đi (Siêu âm, X-Quang...) sẽ ngay lập tức được AI vẽ ra và thông báo thời gian chờ cụ thể!
-6. Bấm vào icon Chatbot ở góc dưới để thử đặt câu hỏi hướng dẫn.
+5. **🤖 Tích hợp RAG Medical Chatbot:** 
+   - Hỗ trợ bệnh nhân tra cứu tự động các thông tin tiền xét nghiệm (Ví dụ: "Tôi có được uống nước trước khi siêu âm?").
 
 ---
 
-## 🏗️ Kiến trúc Công nghệ (Tech Stack)
+## 🏗️ Kiến trúc Hệ thống (Architecture & Tech Stack)
 
-Hệ thống được thiết kế theo kiến trúc Microservices & Event-driven, đảm bảo khả năng mở rộng cực cao cho các Bệnh viện quy mô lớn.
+Hệ thống được thiết kế theo kiến trúc Microservices & Event-driven, đảm bảo tính nhất quán dữ liệu và khả năng mở rộng cho các Bệnh viện quy mô lớn.
 
-![Architecture Flow](https://img.shields.io/badge/Architecture-Event--Driven-blueviolet) ![Status](https://img.shields.io/badge/Ready_for-Scale-success)
+![Architecture Flow](https://img.shields.io/badge/Architecture-Event--Driven-8b5cf6?style=flat-square) ![Golang](https://img.shields.io/badge/Backend-Golang_|_Fiber-00ADD8?style=flat-square&logo=go) ![Python](https://img.shields.io/badge/AI_Engine-Python_|_FastAPI-3776AB?style=flat-square&logo=python) ![React](https://img.shields.io/badge/Frontend-React_|_Vite-61DAFB?style=flat-square&logo=react)
 
-* **Orchestrator Backend (Go / Fiber):** Đóng vai trò là bộ não điều hướng luồng dữ liệu, xử lý REST API siêu tốc và duy trì kết nối WebSocket bền vững với hàng ngàn bệnh nhân cùng lúc.
-* **AI Engine (Python / FastAPI):** 
-  * Sử dụng thư viện **Google OR-Tools** cho bài toán lập lịch ràng buộc Cận lâm sàng.
-  * Tích hợp **RAG Pipeline** để vận hành trợ lý ảo Chatbot.
-* **Frontend (React / Vite / TailwindCSS):** Mang đến giao diện UI/UX trực quan, hiện đại. Được chia thành các Phân hệ riêng biệt (Nurse Dashboard, Doctor Dashboard, Patient App, Kiosk).
-* **Database (PostgreSQL):** Lưu trữ toàn vẹn dữ liệu về Hồ sơ, Lịch hẹn và Nhật ký Di chuyển (Workflow State).
-* **Deployment (Docker / Vercel / Render):** Đóng gói Container hoàn chỉnh, CI/CD tự động lên Cloud.
+- **Backend (Go / Fiber):** Đảm nhiệm vai trò Orchestrator, xử lý REST API hiệu năng cao và duy trì hàng ngàn kết nối WebSocket đồng thời.
+- **AI Engine (Python / FastAPI):** 
+  - Tích hợp **Google OR-Tools** cho lõi thuật toán tối ưu hóa lịch trình và phân luồng.
+  - LLM để suy luận các context trong y tế (Chatbot).
+- **Frontend (React / Vite / TailwindCSS):** Giao diện chia thành 3 phân hệ độc lập: `Admin/Nurse Dashboard`, `Doctor Dashboard`, và `Patient App`.
+- **Cơ sở dữ liệu:** PostgreSQL lưu trữ hồ sơ, lịch hẹn và trạng thái luồng (Workflow State).
 
 ---
 
-## ⚙️ Hướng dẫn Khởi chạy Local (Local Setup)
+## ⚙️ Hướng dẫn Khởi chạy (Local Setup)
 
-Nếu bạn muốn chạy trực tiếp mã nguồn trên máy tính cá nhân:
+### 1. Cơ sở dữ liệu (Database)
+Yêu cầu PostgreSQL. Khởi tạo database `careflow` và cập nhật chuỗi kết nối trong `backend/internal/config/db.go`.
 
-### 1. Database (Postgres)
-Cài đặt PostgreSQL và tạo cơ sở dữ liệu tên `careflow`. Cập nhật chuỗi kết nối trong thư mục `backend/internal/config/db.go`.
-
-### 2. Khởi động AI Engine (Python)
+### 2. Khởi chạy AI Engine (Python)
 ```bash
 cd ai_engine
 pip install -r requirements.txt
@@ -79,26 +72,24 @@ python server.py
 # Server AI chạy tại http://localhost:8000
 ```
 
-### 3. Khởi động Backend Orchestrator (Go)
+### 3. Khởi chạy Backend Orchestrator (Golang)
 ```bash
 cd backend
 go mod tidy
 go run cmd/server/main.go
-# Server Go chạy tại http://localhost:8080 (REST + WebSocket)
+# Server Backend chạy tại http://localhost:8080 (Hỗ trợ REST + WebSocket)
 ```
 
-### 4. Khởi động Frontend (React)
+### 4. Khởi chạy Frontend Application (ReactJS)
 ```bash
 cd frontend
 npm install
 npm run dev
-# Mở trình duyệt tại http://localhost:5173
+# Giao diện chính chạy tại http://localhost:5173
 ```
 
 ---
 
 ## 🏆 Đội ngũ Phát triển
-Sản phẩm được phát triển nhằm mục đích chinh phục cuộc thi **Vietnam AI Innovation Challenge (VAIC) 2026**. 
-Chúng tôi tin rằng **CareFlow AI** không chỉ là một bài toán Hackathon, mà là bước tiến thực sự để định hình lại Trải nghiệm Chăm sóc Y tế tại Việt Nam.
-
-**"Đừng bắt người bệnh phải chờ đợi hệ thống. Hãy để hệ thống phục vụ người bệnh."**
+Sản phẩm được nghiên cứu và phát triển để tham gia **Vietnam AI Innovation Challenge (VAIC) 2026**. 
+Chúng tôi tin rằng **CareFlow AI** sẽ định hình lại tiêu chuẩn vận hành y tế, chuyển dịch từ mô hình *"Bệnh nhân chờ hệ thống"* sang *"Hệ thống chủ động phục vụ Bệnh nhân"*.
