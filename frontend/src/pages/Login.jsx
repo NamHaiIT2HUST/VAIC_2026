@@ -16,16 +16,13 @@ export default function Login() {
         {/* Left Side: Branding */}
         <div className="bg-blue-900 text-white p-12 md:w-2/5 flex flex-col justify-center items-center text-center">
           <ShieldPlus size={64} className="mb-6 text-blue-300" />
-          <h1 className="text-3xl font-bold tracking-tight mb-2">HỆ THỐNG HIS</h1>
-          <h2 className="text-xl font-semibold text-blue-200 mb-6">CareFlow Medical</h2>
-          <p className="text-sm text-blue-100 opacity-80 border-t border-blue-700 pt-6 mt-6">
-            Nền tảng quản lý thông tin và điều phối bệnh nhân thông minh dành cho các cơ sở y tế chuyên nghiệp.
-          </p>
+          <h1 className="text-4xl font-bold tracking-tight mb-2">CareFlow AI</h1>
+          <h2 className="text-lg font-medium text-blue-200">Bệnh viện Thông minh</h2>
         </div>
 
         {/* Right Side: Login Options */}
         <div className="p-12 md:w-3/5 bg-white">
-          <h3 className="text-xl font-bold text-slate-800 mb-8 border-b pb-4">Đăng nhập phân quyền (Demo)</h3>
+          <h3 className="text-xl font-bold text-slate-800 mb-8 border-b pb-4">Chọn quyền đăng nhập</h3>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
             
@@ -83,7 +80,6 @@ export default function Login() {
           </div>
 
           <div className="mt-8 text-center text-xs text-slate-400">
-            Phiên bản nội bộ 1.0.0 • Dành cho đánh giá Hackathon
           </div>
         </div>
 
