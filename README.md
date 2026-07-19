@@ -1,10 +1,11 @@
 <div align="center">
-  <img src="https://img.shields.io/badge/VAIC%202026-Vietnam%20AI%20Innovation%20Challenge-blue?style=for-the-badge&logo=google" alt="VAIC 2026" />
-  <img src="https://img.shields.io/badge/Status-Checkpoint%202%20Submitted-success?style=for-the-badge" alt="Status" />
+  <img src="https://img.shields.io/badge/VAIC%202026-Vietnam%20AI%20Innovation%20Challenge-1e40af?style=for-the-badge&logo=google" alt="VAIC 2026" />
+  <img src="https://img.shields.io/badge/Status-Checkpoint%202%20Submitted-10b981?style=for-the-badge" alt="Status" />
+  <img src="https://img.shields.io/badge/Demo-Ready_for_Recording-ef4444?style=for-the-badge" alt="Demo Ready" />
   <br/><br/>
   
-  <h1>🏥 CareFlow AI - Hệ thống Điều phối & Tối ưu hóa Luồng Bệnh nhân</h1>
-  <p>Giải pháp <b>Toàn diện & Tự động</b> giải quyết triệt để tình trạng ùn tắc cục bộ, giảm thiểu thời gian chờ đợi và nâng cao trải nghiệm khám chữa bệnh dựa trên AI và kiến trúc Event-Driven Real-time.</p>
+  <h1>🏥 CareFlow AI<br/>Hệ thống Điều phối & Tối ưu hóa Luồng Bệnh nhân</h1>
+  <p>Giải pháp <b>Toàn diện & Tự động</b> giải quyết triệt để tình trạng ùn tắc cục bộ, giảm thiểu thời gian chờ đợi và nâng cao trải nghiệm khám chữa bệnh dựa trên cốt lõi AI và kiến trúc Event-Driven Real-time.</p>
 </div>
 
 ---
@@ -22,10 +23,24 @@ Tại các bệnh viện đa khoa lớn, tình trạng thắt cổ chai trong qu
 
 ### 🌟 Tính năng Cốt lõi (Core Innovations)
 
-1. **AI Patient Routing & Sequencing (OR-Tools CP Solver):** Khi bác sĩ chỉ định các dịch vụ cận lâm sàng, hệ thống AI tự động giải quyết bài toán Ràng buộc (Constraint Programming) để sắp xếp **thứ tự thực hiện tối ưu nhất**. Thuật toán tính toán dựa trên thời gian chờ hiện tại của từng phòng, yêu cầu chuyên môn (nhịn ăn, lấy máu trước) để giảm tối đa thời gian chờ và di chuyển lòng vòng.
-2. **Dynamic Real-time Adjustment:** Tự động điều phối lại toàn bộ luồng bệnh nhân khi có sự cố bất ngờ (Ví dụ: Máy X-Quang hỏng, có ca cấp cứu chen ngang). Sự thay đổi này được cập nhật ngay lập tức đến mọi thiết bị liên quan.
-3. **Wait-time Estimation & Tracking:** Tính toán và hiển thị thời gian chờ dự kiến liên tục theo thời gian thực (Real-time). Bệnh nhân được chỉ dẫn trực tiếp qua App cá nhân thông qua kết nối **WebSocket**.
-4. **Smart Nurse/Admin Dashboard:** Bảng điều khiển trung tâm cung cấp bức tranh toàn cảnh về tải trọng bệnh viện (Department Load), theo dõi KPI thời gian chờ và hỗ trợ Quản lý Sự cố Trực quan (Visual Incident Management).
+1. **🚀 AI Patient Routing & Sequencing (OR-Tools CP Solver):** 
+   - Khi bác sĩ chỉ định các dịch vụ cận lâm sàng, hệ thống AI tự động giải quyết bài toán Ràng buộc (Constraint Programming) để sắp xếp **thứ tự thực hiện tối ưu nhất**. 
+   - Thuật toán tính toán dựa trên thời gian chờ hiện tại của từng phòng, yêu cầu chuyên môn (nhịn ăn, lấy máu trước) để giảm tối đa thời gian chờ và di chuyển lòng vòng.
+
+2. **⚡ Dynamic Real-time Adjustment (Visual Incident Management):** 
+   - Tự động điều phối lại toàn bộ luồng bệnh nhân khi có sự cố bất ngờ (Ví dụ: Máy X-Quang hỏng, có ca cấp cứu chen ngang). 
+   - Sự thay đổi này được cập nhật ngay lập tức đến mọi thiết bị liên quan (Re-routing trực tiếp).
+
+3. **⏱️ Wait-time Estimation & Tracking:** 
+   - Tính toán và hiển thị thời gian chờ dự kiến liên tục theo thời gian thực (Real-time). 
+   - Bệnh nhân được chỉ dẫn trực tiếp qua App cá nhân thông qua kết nối **WebSocket**, kèm Sơ đồ di chuyển (SVG Map) nhấp nháy động.
+
+4. **🎛️ Smart Nurse/Admin Dashboard:** 
+   - Bảng điều khiển trung tâm cung cấp bức tranh toàn cảnh về tải trọng bệnh viện (Department Load).
+   - Theo dõi KPI thời gian chờ và hỗ trợ thao tác Tắt/Bật cấu hình máy móc trực quan (1-click action).
+
+5. **🤖 Tích hợp RAG Medical Chatbot:** 
+   - Hỗ trợ bệnh nhân tra cứu tự động các thông tin tiền xét nghiệm (Ví dụ: "Tôi có được uống nước trước khi siêu âm?").
 
 ---
 
@@ -33,12 +48,12 @@ Tại các bệnh viện đa khoa lớn, tình trạng thắt cổ chai trong qu
 
 Hệ thống được thiết kế theo kiến trúc Microservices & Event-driven, đảm bảo tính nhất quán dữ liệu và khả năng mở rộng cho các Bệnh viện quy mô lớn.
 
-![Architecture Flow](https://img.shields.io/badge/Architecture-Event--Driven-blueviolet) ![Status](https://img.shields.io/badge/Ready_for-Scale-success)
+![Architecture Flow](https://img.shields.io/badge/Architecture-Event--Driven-8b5cf6?style=flat-square) ![Golang](https://img.shields.io/badge/Backend-Golang_|_Fiber-00ADD8?style=flat-square&logo=go) ![Python](https://img.shields.io/badge/AI_Engine-Python_|_FastAPI-3776AB?style=flat-square&logo=python) ![React](https://img.shields.io/badge/Frontend-React_|_Vite-61DAFB?style=flat-square&logo=react)
 
 - **Backend (Go / Fiber):** Đảm nhiệm vai trò Orchestrator, xử lý REST API hiệu năng cao và duy trì hàng ngàn kết nối WebSocket đồng thời.
 - **AI Engine (Python / FastAPI):** 
   - Tích hợp **Google OR-Tools** cho lõi thuật toán tối ưu hóa lịch trình và phân luồng.
-  - Tích hợp LLM Chatbot hỗ trợ giải đáp quy trình y tế.
+  - LLM để suy luận các context trong y tế (Chatbot).
 - **Frontend (React / Vite / TailwindCSS):** Giao diện chia thành 3 phân hệ độc lập: `Admin/Nurse Dashboard`, `Doctor Dashboard`, và `Patient App`.
 - **Cơ sở dữ liệu:** PostgreSQL lưu trữ hồ sơ, lịch hẹn và trạng thái luồng (Workflow State).
 
@@ -46,35 +61,35 @@ Hệ thống được thiết kế theo kiến trúc Microservices & Event-drive
 
 ## ⚙️ Hướng dẫn Khởi chạy (Local Setup)
 
-### 1. Database
+### 1. Cơ sở dữ liệu (Database)
 Yêu cầu PostgreSQL. Khởi tạo database `careflow` và cập nhật chuỗi kết nối trong `backend/internal/config/db.go`.
 
-### 2. AI Engine (Python)
+### 2. Khởi chạy AI Engine (Python)
 ```bash
 cd ai_engine
 pip install -r requirements.txt
 python server.py
-# Server chạy tại http://localhost:8000
+# Server AI chạy tại http://localhost:8000
 ```
 
-### 3. Backend Orchestrator (Go)
+### 3. Khởi chạy Backend Orchestrator (Golang)
 ```bash
 cd backend
 go mod tidy
 go run cmd/server/main.go
-# Server chạy tại http://localhost:8080 (REST + WebSocket)
+# Server Backend chạy tại http://localhost:8080 (Hỗ trợ REST + WebSocket)
 ```
 
-### 4. Frontend Application (React)
+### 4. Khởi chạy Frontend Application (ReactJS)
 ```bash
 cd frontend
 npm install
 npm run dev
-# Mở trình duyệt tại http://localhost:5173
+# Giao diện chính chạy tại http://localhost:5173
 ```
 
 ---
 
 ## 🏆 Đội ngũ Phát triển
 Sản phẩm được nghiên cứu và phát triển để tham gia **Vietnam AI Innovation Challenge (VAIC) 2026**. 
-Chúng tôi tin rằng **CareFlow AI** sẽ định hình lại tiêu chuẩn vận hành y tế, chuyển dịch từ mô hình "Bệnh nhân chờ hệ thống" sang "Hệ thống chủ động phục vụ Bệnh nhân".
+Chúng tôi tin rằng **CareFlow AI** sẽ định hình lại tiêu chuẩn vận hành y tế, chuyển dịch từ mô hình *"Bệnh nhân chờ hệ thống"* sang *"Hệ thống chủ động phục vụ Bệnh nhân"*.
